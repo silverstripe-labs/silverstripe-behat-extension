@@ -148,6 +148,20 @@ class SilverStripeContext extends MinkContext implements SilverStripeAwareContex
         $url .= '?' . http_build_query($params);
 
         $this->getSession()->visit($url);
+
+        $page = $this->getSession()->getPage();
+        $content = $page->getContent();
+
+        if(!preg_match('/<!-- +SUCCESS: +DBNAME=([^ ]+)/i', $content, $matches)) {
+            throw new \LogicException("Could not create a test session.  Details below:\n" . $content);
+
+        } else if($matches[1] != $this->databaseName) {
+            throw new \LogicException("Test session is using the database $matches[1]; it should be using $this->databaseName.");
+
+        }
+
+        $loginForm = $page->find('css', '#MemberLoginForm_LoginForm');
+
     }
 
     /**
