@@ -107,7 +107,8 @@ class LoginContext extends BehatContext
      */
     public function stepIAmNotLoggedIn()
     {
-        $this->getSession()->reset();
+        $c = $this->getMainContext();
+        $this->getSession()->visit($c->joinUrlParts($c->getBaseUrl(), 'Security/logout'));
     }
 
     /**
@@ -116,8 +117,14 @@ class LoginContext extends BehatContext
     public function stepILogInWith($email, $password)
     {
         $c = $this->getMainContext();
-        $loginUrl = $c->joinUrlParts($c->getBaseUrl(), $c->getLoginUrl());
 
+        // Make sure we're logged out first, as the state of already being logged
+        // in and visiting the login page shows a warning "You don't have permission...",
+        // but in that case there is no login form.
+        $logoutUrl = $c->joinUrlParts($c->getBaseUrl(), 'Security/logout');
+        $this->getSession()->visit($logoutUrl);
+
+        $loginUrl = $c->joinUrlParts($c->getBaseUrl(), $c->getLoginUrl());
         $this->getSession()->visit($loginUrl);
 
         $page = $this->getSession()->getPage();
