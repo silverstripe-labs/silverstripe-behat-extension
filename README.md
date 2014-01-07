@@ -48,7 +48,7 @@ Install PHPUnit through PEAR:
 
 And get the latest Selenium2 server (requires Java):
 
-	wget http://selenium.googlecode.com/files/selenium-server-standalone-2.25.0.jar
+	wget http://selenium.googlecode.com/files/selenium-server-standalone-2.39.0.jar
 	
 *If you are having issues running Selenium with your browser please check https://code.google.com/p/selenium/downloads/list as the Selenium driver could be out of date*
 
@@ -139,11 +139,11 @@ number that failed.
 
 You can either run the server in a separate Terminal tab:
 
-    java -jar selenium-server-standalone-2.25.0.jar
+    java -jar selenium-server-standalone-2.39.0.jar
 
 Or you can run it in the background:
 
-    java -jar selenium-server-standalone-2.25.0.jar > /dev/null &
+    java -jar selenium-server-standalone-2.39.0.jar > /dev/null &
 
 
 ### Running the tests
