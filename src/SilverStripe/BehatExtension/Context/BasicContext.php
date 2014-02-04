@@ -422,6 +422,24 @@ JS;
 	}
 
 	/**
+	 * Finds a named <table> element. See {@link \Behat\Mink\Selector\NamedSelector} for ways to specify how to find
+	 * the table. The easiest of these is adding a <caption> element to the table in question.
+	 *
+	 * @Then /^I should see "([^"]*)" in the "([^"]*)" table$/
+	 */
+	public function iShouldSeeInTheTable($value, $tableName) {
+		// Get table
+		$page = $this->getSession()->getPage();
+		$table = $page->find('named', array('table', "$tableName"));
+
+		if($table) {
+			assertContains($value, $table->getText(), "Couldn't find '$value' in the '$tableName' table");
+		} else {
+			throw new \InvalidArgumentException("Couldn't find a table called '$tableName'");
+		}
+	}
+
+	/**
 	 * Transforms relative time statements compatible with strtotime().
 	 * Example: "time of 1 hour ago" might return "22:00:00" if its currently "23:00:00".
 	 * Customize through {@link setTimeFormat()}.
