@@ -52,18 +52,42 @@ class SilverStripeAwareInitializer implements InitializerInterface
      */
     protected $screenshotPath;
 
+	/**
+	 * @var object {@link TestSessionEnvironment}
+	 */
+	protected $testSessionEnvironment;
+
     /**
      * Initializes initializer.
      */
     public function __construct($frameworkPath)
     {
         $this->bootstrap($frameworkPath);
-        $this->databaseName = $this->initializeTempDb();
+
+		file_put_contents('php://stdout', "Creating test session environment" . PHP_EOL);
+
+		$testEnv = \Injector::inst()->get('TestSessionEnvironment');
+
+		$testEnv->startTestSession(array(
+			'createDatabase' => true
+		));
+
+		$state = $testEnv->getState();
+		$this->databaseName = $state->database;
+
+		$this->testSessionEnvironment = $testEnv;
+
+		file_put_contents('php://stdout', "Temp Database: $this->databaseName" . PHP_EOL . PHP_EOL);
     }
 
     public function __destruct()
     {
-        $this->deleteTempDb();
+		file_put_contents('php://stdout', "Killing test session environment...");
+
+		$testEnv = \Injector::inst()->get('TestSessionEnvironment');
+		$testEnv->endTestSession();
+
+		file_put_contents('php://stdout', " done!" . PHP_EOL);
     }
 
     /**
@@ -157,21 +181,5 @@ class SilverStripeAwareInitializer implements InitializerInterface
 
         // Remove the error handler so that PHPUnit can add its own
         restore_error_handler();
-    }
-
-    protected function initializeTempDb()
-    {
-        $dbname = \SapphireTest::create_temp_db();
-        file_put_contents('php://stdout', "Creating temp DB $dbname" . PHP_EOL);
-        \DB::set_alternative_database_name($dbname);
-
-        return $dbname;
-    }
-
-    protected function deleteTempDb()
-    {
-        file_put_contents('php://stdout', "Killing temp DB" . PHP_EOL);
-        \SapphireTest::kill_temp_db();
-        \DB::set_alternative_database_name(null);
     }
 }

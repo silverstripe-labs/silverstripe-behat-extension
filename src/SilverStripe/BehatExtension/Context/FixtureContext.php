@@ -183,7 +183,17 @@ class FixtureContext extends BehatContext
 		if($class == 'File' || is_subclass_of($class, 'File')) {
 			$fields = $this->prepareAsset($class, $id, $fields);
 		}
-		$this->fixtureFactory->createObject($class, $id, $fields);
+
+		// We should check if this fixture object already exists - if it does, we update it. If not, we create it
+		if($existingFixture = $this->fixtureFactory->get($class, $id)) {
+			// Merge existing data with new data, and create new object to replace existing object
+			foreach($fields as $k => $v) {
+				$existingFixture->$k = $v;
+			}
+			$existingFixture->write();
+		} else {
+			$this->fixtureFactory->createObject($class, $id, $fields);
+		}
 	}
 
 	/**
