@@ -13,6 +13,9 @@ use Behat\Mink\Driver\Selenium2Driver;
 use Behat\Gherkin\Node\PyStringNode,
     Behat\Gherkin\Node\TableNode;
 
+use Behat\Mink\Exception\ExpectationException,
+    Behat\Mink\Exception\ResponseTextException;
+
 // PHPUnit
 require_once 'PHPUnit/Autoload.php';
 require_once 'PHPUnit/Framework/Assert/Functions.php';
@@ -46,6 +49,13 @@ class BasicContext extends BehatContext
 	 * @var String
 	 */
 	protected $datetimeFormat = 'Y-m-d H:i:s';
+
+    /**
+     * Timeout in Seconds to wait for element
+     * @var integer
+     */
+    protected $timeout = 5;
+
 
     /**
      * Initializes context.
@@ -515,25 +525,84 @@ JS;
 	}
 
     /**
-     * Checks that field with specified in|name|label|value is disabled.
-     * Example: Then the field "Email" should be disabled
-     * Example: Then the "Email" field should be disabled
+     * Checks, that the page should contains specified text after given timeout
      *
-     * @Then /^the "(?P<name>(?:[^"]|\\")*)" (?P<type>(?:(field|button))) should (?P<negate>(?:(not |)))be disabled/
-     * @Then /^the (?P<type>(?:(field|button))) "(?P<name>(?:[^"]|\\")*)" should (?P<negate>(?:(not |)))be disabled/
+     * @Then /^(?:|I )wait (?P<seconds>\d+) seconds? until I see "(?P<text>[^"]*)"$/
      */
-    public function stepFieldShouldBeDisabled($name, $type, $negate) {
-        $page = $this->getSession()->getPage();
-        if($type == 'field') {
-            $element = $page->findField($name);    
-        } else {
-            $element = $page->find('named', array(
-                'button', $this->getSession()->getSelectorsHandler()->xpathLiteral($name)
-            ));
-        }
-        
-        assertNotNull($element, sprintf("Element '%s' not found", $name));
+    public function iWaitSecondsUntilISee($seconds, $text)
+    {
+        $this->iWaitSecondsUntilISeeInTheElement($seconds, $text, $this->getSession()->getPage());
+    }
 
+    /**
+     * Checks, that the page should contains specified text after timeout
+     *
+     * @Then /^(?:|I )wait until I see "(?P<text>[^"]*)"$/
+     */
+    public function iWaitUntilISee($text)
+    {
+        $timeout = $this->timeout;
+        $this->iWaitSecondsUntilISee($timeout, $text);
+    }
+
+    /**
+     * Checks, that the element contains specified text after timeout
+     *
+     * @Then /^(?:|I )wait (?P<seconds>\d+) seconds? until I see "(?P<text>[^"]*)" in the "(?P<element>[^"]*)" element$/
+     */
+    public function iWaitSecondsUntilISeeInTheElement($seconds, $text, $element)
+    {
+        $expected = str_replace('\\"', '"', $text);
+
+        if (is_string($element)) {
+            $node = $this->getSession()->getPage()->find('css', $element);
+        }
+        else {
+            $node = $element;
+        }
+
+        $startTime = time();
+
+        do {
+            $now = time();
+            $actual   = $node->getText();
+            $e = null;
+
+            try {
+                $regex   = '/'.preg_quote($expected, '/').'/ui';
+                if (!preg_match($regex, $actual)) {                
+                    $message = sprintf('The string "%s" was not found.', $expected);
+                    throw new ExpectationException($message, $this->getSession());                
+                }                
+            }
+            catch (ExpectationException $e) {
+                if ($now - $startTime >= $seconds) {
+                    $message = sprintf('The text "%s" was not found after a %s seconds timeout', $expected, $seconds);
+                    throw new ResponseTextException($message, $this->getSession(), $e);
+                }
+            }
+
+            if ($e == null) {
+                break;
+            }
+
+        } while ($now - $startTime < $seconds);
+    }
+
+	/**
+	 * Checks that field with specified in|name|label|value is disabled.
+	 * Example: Then the field "Email" should be disabled
+	 * Example: Then the "Email" field should be disabled
+	 *
+	 * @Then /^the "(?P<field>(?:[^"]|\\")*)" field should be disabled/
+	 * @Then /^the field "(?P<field>(?:[^"]|\\")*)" should be disabled/
+	 */
+	public function stepFieldShouldBeDisabled($field) {
+		$page = $this->getSession()->getPage();
+		$fieldElement = $page->findField($field);
+		assertNotNull($fieldElement, sprintf("Field '%s' not found", $field));
+
+		$disabledAttribute = $fieldElement->getAttribute('disabled');
         $disabledAttribute = $element->getAttribute('disabled');
         if(trim($negate)) {
             assertNull($disabledAttribute, sprintf("Failed asserting element '%s' is not disabled", $name));
