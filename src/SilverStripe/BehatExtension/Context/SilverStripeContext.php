@@ -120,6 +120,38 @@ class SilverStripeContext extends MinkContext implements SilverStripeAwareContex
 		return $this->screenshotPath;
 	}
 
+	public function getRegionMap(){
+		return $this->regionMap;
+	}
+
+	public function setRegionMap($regionMap){
+		$this->regionMap = $regionMap;
+	}
+
+	/**
+	 * Returns MinkElement based off region defined in .yml file
+	 * @return MinkElement|null
+	 */
+	public function getRegionObj($region) {
+		$key = $this->regionMap[$region];
+
+		if(!$this->regionMap){
+			throw new \LogicException("Cannot find 'region_map' in the behat.yml");
+		}
+		
+		if(!$key) {
+			throw new \LogicException("Cannot find the specified region in the behat.yml");
+		}
+
+		$regionObj = $this->getSession()->getPage()->find('css', $key);
+
+		if(!$regionObj) {
+			throw new ElementNotFoundException("Cannot find the specified region on the page");
+		}
+
+		return $regionObj;
+	}
+
 	/**
 	 * @BeforeScenario
 	 */

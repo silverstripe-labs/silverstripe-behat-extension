@@ -115,6 +115,7 @@ class SilverStripeAwareInitializer implements InitializerInterface
         $context->setAjaxSteps($this->ajaxSteps);
         $context->setAjaxTimeout($this->ajaxTimeout);
         $context->setScreenshotPath($this->screenshotPath);
+        $context->setRegionMap($this->regionMap);
         $context->setAdminUrl($this->adminUrl);
         $context->setLoginUrl($this->loginUrl);
     }
@@ -167,6 +168,14 @@ class SilverStripeAwareInitializer implements InitializerInterface
     public function getScreenshotPath()
     {
         return $this->screenshotPath;
+    }
+
+    public function getRegionMap(){
+        return $this->regionMap;
+    }
+
+    public function setRegionMap($regionMap) {
+        $this->regionMap = $regionMap;
     }
 
     /**

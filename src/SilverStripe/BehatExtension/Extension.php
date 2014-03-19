@@ -58,6 +58,9 @@ class Extension implements ExtensionInterface
         if (isset($config['ajax_steps'])) {
             $container->setParameter('behat.silverstripe_extension.ajax_steps', $config['ajax_steps']);
         }
+        if (isset($config['region_map'])) {
+             $container->setParameter('behat.silverstripe_extension.region_map', $config['region_map']);
+        }
     }
 
     /**
@@ -84,6 +87,10 @@ class Extension implements ExtensionInterface
                 end()->
                 scalarNode('screenshot_path')->
                     defaultNull()->
+                end()->
+                arrayNode('region_map')->
+                    useAttributeAsKey('key')->
+                    prototype('variable')->end()->
                 end()->
                 scalarNode('admin_url')->
                     defaultValue('/admin/')->

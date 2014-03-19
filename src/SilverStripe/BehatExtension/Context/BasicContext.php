@@ -550,4 +550,21 @@ JS;
 		assertNull($disabledAttribute, sprintf("Failed asserting field '%s' is enabled", $field));
 	}
 
+    /**
+     * Clicks a link via a configuarable css selector in the behat.yml configuration
+     * Example: Given I follow "Select" in the "" region 
+     * 
+     * @Given /^I (?:follow|click) "(?P<link>[^"]*)" in the "(?P<region>[^"]*)"(?:| region)$/
+     */
+    public function iFollowInTheRegion($link, $region) {
+        $context = $this->getMainContext();
+        $regionObj = $context->getRegionObj($region);
+        $linkObj = $regionObj->findLink($link);
+        if (empty($linkObj)) {
+            throw new \Exception(sprintf('The link "%s" was not found in the region "%s" on the page %s', $link, $region, $this->getSession()->getCurrentUrl()));
+        }
+
+        $linkObj->click();        
+    }
+
 }

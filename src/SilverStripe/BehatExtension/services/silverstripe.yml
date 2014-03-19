@@ -11,6 +11,7 @@ parameters:
   behat.silverstripe_extension.login_url: ~
   behat.silverstripe_extension.screenshot_path: ~
   behat.silverstripe_extension.module:
+  behat.silverstripe_extension.region_map: ~
   behat.silverstripe_extension.context.path_suffix: tests/behat/features/
 services:
   behat.silverstripe_extension.context.initializer:
@@ -23,6 +24,7 @@ services:
       - [setAdminUrl, [%behat.silverstripe_extension.admin_url%]]
       - [setLoginUrl, [%behat.silverstripe_extension.login_url%]]
       - [setScreenshotPath, [%behat.silverstripe_extension.screenshot_path%]]
+      - [setRegionMap, [%behat.silverstripe_extension.region_map%]]
     tags:
       - { name: behat.context.initializer }
   behat.silverstripe_extension.context.class_guesser:
