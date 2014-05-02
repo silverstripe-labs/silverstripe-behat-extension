@@ -139,6 +139,7 @@ class LoginContext extends BehatContext
         // If no login form, go to /security/login page
         if(!$visibleForm) {
             $c = $this->getMainContext();
+            $this->getSession()->visit($c->joinUrlParts($c->getBaseUrl(), 'Security/logout'));
             $loginUrl = $c->joinUrlParts($c->getBaseUrl(), $c->getLoginUrl());
             $this->getSession()->visit($loginUrl);
             $page = $this->getSession()->getPage();
