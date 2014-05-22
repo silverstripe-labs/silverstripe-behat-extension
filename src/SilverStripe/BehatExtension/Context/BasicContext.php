@@ -648,11 +648,14 @@ JS;
 	 */
 	public function iSelectTheRadioButton($radioLabel) {
 		$session = $this->getSession();
-		$radioButtons = $session->getPage()->findAll("css", "input[type='radio']");
-                foreach ($radioButtons as $radioButton) {
-                  if($radioButton->getAttribute('label') == $radioLabel)
-                    break;
-                }
+                $radioButton = $session->getPage()->find('named', array(
+                    'radio', $this->getSession()->getSelectorsHandler()->xpathLiteral($radioLabel)
+                ));
+//		$radioButtons = $session->getPage()->findAll("css", "input[type='radio']");
+//                foreach ($radioButtons as $radioButton) {
+//                  if($radioButton->getAttribute('label') == $radioLabel)
+//                    break;
+//                }
 		assertNotNull($radioButton);
 		$session->getDriver()->click($radioButton->getXPath());
 	}
