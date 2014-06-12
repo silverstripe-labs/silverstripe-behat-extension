@@ -121,11 +121,38 @@ class EmailContext extends BehatContext
 
         $email = $this->lastMatchedEmail;
         if($email->Content) {
-            assertContains($content, $email->Content);
+            assertContains($content, $this->plaintext($email->Content));
         } else {
             assertContains($content, $email->PlainContent);
         }
     }
+
+    /* $email->Content returns all the styles and scripts, this helper method
+     * strips all the scripts and tags to help debugging styled emails 
+     * @param  [type] $html [description]
+     * @return [type]       [description]
+     * */
+    public function plaintext($html) {
+        // remove comments and any content found in the the comment area (strip_tags only removes the actual tags).
+        $plaintext = preg_replace('#<!--.*?-->#s', '', $html);
+
+        // put a space between list items (strip_tags just removes the tags).
+        $plaintext = preg_replace('#</li>#', ' </li>', $plaintext);
+
+        // remove all script and style tags
+        $plaintext = preg_replace('#<(script|style)\b[^>]*>(.*?)</(script|style)>#is', "", $plaintext);
+
+        // remove br tags (missed by strip_tags)
+        $plaintext = preg_replace("#<br[^>]*?>#", " ", $plaintext);
+
+        // remove all remaining html
+        $plaintext = strip_tags($plaintext);
+
+        // parse whitespace/spaces/linebreaks into a single line
+        $plaintext = preg_replace("/\s+/", ' ', $plaintext); 
+
+        return $plaintext;
+    }   
 
     /**
      * @When /^I click on the "([^"]*)" link in the email (to|from) "([^"]*)"$/
