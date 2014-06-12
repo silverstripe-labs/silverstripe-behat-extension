@@ -676,4 +676,24 @@ JS;
 		$session->getDriver()->click($radioButton->getXPath());
 	}
 
+ 	/**
+ 	 * Finds a <table> element by id, name, title, caption, style or value. See {@link \Behat\Mink\Selector\NamedSelector} for ways to specify how to find
+ 	 * the table. The easiest of these is adding a <caption> element to the table in question.
+	 *
+ 	 * @Then /^the table "([^"]*)" should contain "([^"]*)"$/
+ 	 */
+ 	public function theTableShouldContain($locator, $value) {
+ 		// Get table
+		$page = $this->getSession()->getPage();
+ 		$table = $page->find('xpath',
+                          $this->getSession()->getSelectorsHandler()->selectorToXpath("xpath", ".//table[(./@id = '$locator' or"
+                                  . " ./@name = '$locator' or contains(./@title, '$locator') or contains(./@caption, '$locator') or"
+                                  . " contains(./@value, '$locator') or ./@class = '$locator' or ./@style = '$locator')]")
+                );              
+ 		if($table) {
+ 			assertContains($value, $table->getText(), "Couldn't find '$value' in the '$locator' table");
+ 		} else {
+ 			throw new \InvalidArgumentException("Couldn't find a table called '$locator'");
+ 		}
+ 	}
 }
