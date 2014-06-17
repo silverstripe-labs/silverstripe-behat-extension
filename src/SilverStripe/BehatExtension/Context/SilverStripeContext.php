@@ -137,12 +137,14 @@ class SilverStripeContext extends MinkContext implements SilverStripeAwareContex
 	 */
 	public function getRegionObj($region) {
 		// Try to find regions directly by CSS selector
-		$regionObj = $this->getSession()->getPage()->find('css', 
-                        $this->getSession()->getSelectorsHandler()->xpathLiteral($region));
+                if (false !== strpos($region, "'")) {
+                    $cssRegion = preg_replace("/'/", "\'", $region);
+                 }
+		$regionObj = $this->getSession()->getPage()->find('css', $cssRegion);
 		if($regionObj) {
 			return $regionObj;
-		}
-
+		}                 
+                 
 		// Fall back to region identified by data-tilte
 		$regionObj = $this->getSession()->getPage()->find('css', '[data-title="' . $region . '"]');
 		if($regionObj) {
