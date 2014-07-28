@@ -750,4 +750,48 @@ JS;
         return $table;
     }
 
+    /**
+     * @Given /^(?:|I )press the "([^"]*)" key in the "([^"]*)" field$/
+     *
+     * @example I press the "TAB" key in the "user name" field
+     * @throws \Exception
+     */
+    public function iPressKeyInField($char, $field) {
+        static $keys = array(
+            // @todo Add character codes for more special keys; arrows, caps, shift,
+            // backspace, delete, ctrl, command, alt, option, spacebar, page up/down,
+            // home, end.
+            'TAB' => 9,
+            'ENTER' => 13,
+            'RETURN' => 13,
+            'ESC' => 27,
+            'ESCAPE' => 27,
+            'SPACE' => 32,
+            'BLANKSPACE' => 32,
+            'BACKSPACE' => 8,
+            'BLANKSPACE' => 32,
+            'DELETE' => 127
+        );
+ 
+        if (is_string($char)) {
+            if (strlen($char) < 1) {
+                throw new \Exception('FeatureContext->keyPress($char, $field) was invoked but the $char parameter was empty.');
+            } else if (strlen($char) > 1) {
+                $char = $keys[strtoupper($char)];
+            }
+        }
+ 
+        $locator = str_replace('\\"', '"', $field);//equals to MinkContext::fixStepArgument()
+        $element = $this->getSession()->getPage()->findField($locator);
+        if (!$element) {
+            throw new \Exception("Field '$field' not found");
+        }
+ 
+        $driver = $this->getSession()->getDriver();
+        // $driver->keyPress($element->getXpath(), $char);
+        // This alternative to Driver->keyPress() handles cases that depend on
+        // javascript which binds to key down/up events directly
+        $driver->keyDown($element->getXpath(), $char);
+        $driver->keyUp($element->getXpath(), $char);
+    }
 }
