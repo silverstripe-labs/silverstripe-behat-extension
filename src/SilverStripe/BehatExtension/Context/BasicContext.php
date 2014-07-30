@@ -750,4 +750,34 @@ JS;
         return $table;
     }
 
+	/**
+	 * Checks the order of two texts.
+	 * Assumptions: the two texts appear in their conjunct parent element once
+	 * @Then /^I should see the text "(?P<textBefore>(?:[^"]|\\")*)" (before|after) the text "(?P<textAfter>(?:[^"]|\\")*)"$/
+	 */
+	public function theTextBeforeAfter($textBefore, $order, $textAfter) {
+		$textBefore = $this->fixStepArgument($textBefore);
+		$textAfter = $this->fixStepArgument($textAfter);
+
+		$elementBefore = $this->getSession()->getPage()->find('named', array(
+			'content', $this->getSession()->getSelectorsHandler()->xpathLiteral($textBefore)
+		));
+		assertNotNull($elementBefore, sprintf('%s not found', $textBefore));
+		$elementAfter = $this->getSession()->getPage()->find('named', array(
+			'content', $this->getSession()->getSelectorsHandler()->xpathLiteral($textAfter)
+		));
+		assertNotNull($elementAfter, sprintf('%s not found', $textAfter));
+
+		$text = $elementBefore->getText();
+		while (strpos($text, $textAfter) === FALSE) {
+			$elementBefore = $elementBefore->getParent();
+			$text = $elementBefore->getText();
+		}
+
+		if($order === 'before') {
+			assertTrue(preg_match("/$textBefore(.*?)$textAfter/", $text) === 1, $text);
+		} else {
+			assertTrue(preg_match("/$textAfter(.*?)$textBefore/", $text) === 1, $text);
+		}
+	}
 }
