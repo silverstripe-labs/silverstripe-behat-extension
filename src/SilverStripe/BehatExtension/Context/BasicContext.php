@@ -780,4 +780,33 @@ JS;
 			assertTrue(preg_match("/$textAfter(.*?)$textBefore/", $text) === 1, $text);
 		}
 	}
+	
+	/**
+	 * Fills in HTML Editor (rich-text editor, e.g. TinyMCE) with specified id|name|label.
+	 * @example I fill in "Terms and Conditions" HTML Editor with "test User Terms and Conditions1"
+	 * @When /^(?:|I )fill in "(?P<label>(?:[^"]|\\")*)" HTML Editor with "(?P<value>(?:[^"]|\\")*)"$/
+	 * @When /^(?:|I )fill in "(?P<value>(?:[^"]|\\")*)" for "(?P<label>(?:[^"]|\\")*)" HTML Editor$/
+	 */
+	public function fillInHtmlEditor($label, $value) {
+		$locator = $this->fixStepArgument($label);
+		$value = $this->fixStepArgument($value);
+		
+		$element = $this->getSession()->getPage()->find('xpath',
+			$this->getSession()->getSelectorsHandler()->selectorToXpath("xpath", ".//div["
+			. "(./@id='$locator' or ./@name='$locator' or contains(./@label, '$locator'))]"
+		));
+		assertNotNull($element, sprintf('HTML Editor "%s" label or id not found', $label));
+		
+		$iframe = $element->getParent()->find('css','iframe');
+		assertNotNull($iframe, 'iframe not found for HTML Editor');
+		$iframeId = $iframe->getAttribute('id');
+		if($iframeId == null) {
+			$iframeId = $iframe->getAttribute('name');
+		}
+		assertNotNull($iframeId, 'iframe id and name not found for HTML Editor');
+		$this->getSession()->switchToIframe($iframeId);
+		$field = $this->getSession()->getPage()->find('css', 'body');
+		$field->setValue($value);
+		$this->getSession()->switchToIframe(null);
+	}
 }
