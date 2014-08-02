@@ -1,0 +1,10 @@
+default:
+  suites: []
+  extensions:
+    SilverStripe\BehatExtension\MinkExtension:
+      default_session: selenium2
+      javascript_session: selenium2
+      selenium2:
+        browser: firefox
+    SilverStripe\BehatExtension\Extension:
+      screenshot_path: %paths.base%/artifacts/screenshots

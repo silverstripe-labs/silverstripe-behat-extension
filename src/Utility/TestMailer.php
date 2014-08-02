@@ -3,7 +3,6 @@
 namespace SilverStripe\BehatExtension\Utility;
 
 use SilverStripe\Dev\TestMailer as BaseTestMailer;
-use SilverStripe\Core\Injector\Injector;
 use SilverStripe\TestSession\TestSessionEnvironment;
 
 /**
@@ -13,7 +12,6 @@ use SilverStripe\TestSession\TestSessionEnvironment;
  */
 class TestMailer extends BaseTestMailer
 {
-
     /**
      * @var TestSessionEnvironment
      */
@@ -36,17 +34,6 @@ class TestMailer extends BaseTestMailer
         $this->testSessionEnvironment->applyState($state);
     }
 
-    /**
-     * Search for an email that was sent.
-     * All of the parameters can either be a string, or, if they start with "/", a PREG-compatible regular expression.
-     *
-     * @param $to
-     * @param $from
-     * @param $subject
-     * @param $content
-     * @return array Contains the keys: 'type', 'to', 'from', 'subject', 'content', 'plainContent', 'attachedFiles',
-     *               'customHeaders', 'htmlContent', 'inlineImages'
-     */
     public function findEmail($to = null, $from = null, $subject = null, $content = null)
     {
         $matches = $this->findEmails($to, $from, $subject, $content);

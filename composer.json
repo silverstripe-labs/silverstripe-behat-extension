@@ -1,52 +1,59 @@
 {
-	"name": "silverstripe/behat-extension",
-	"type": "behat-extension",
-	"description": "SilverStripe framework extension for Behat",
-	"keywords": ["framework", "web", "bdd", "silverstripe"],
-	"homepage": "http://silverstripe.org",
-	"license": "MIT",
-	"authors": [
-		{
-			"name": "Michal Ochman",
-			"email": "ochman.d.michal@gmail.com"
-		},
-		{
-			"name": "Ingo Schommer",
-			"email": "ingo@silverstripe.com"
-		}
-	],
-
-	"require": {
-		"php": ">=5.3.3",
-		"phpunit/phpunit": "^4.8 || ^5.7",
-		"behat/behat": "~2.5.0",
-		"behat/mink": "~1.6.0",
-		"behat/mink-extension": "~1.3.0",
-		"behat/mink-selenium2-driver": "~1.2.0",
-		"symfony/dom-crawler": "~2.0",
-		"silverstripe/testsession": "2.0.0-alpha6",
-		"silverstripe/framework": "^4.0.0@dev"
-	},
-
-	"autoload": {
-		"psr-0": {
-			"SilverStripe\\BehatExtension": "src/"
-		}
-	},
-	"autoload-dev": {
-		"psr-0": {
-			"SilverStripe\\BehatExtension\\Tests": "tests/"
-		},
-		"classmap": [
-			"framework",
-			"vendor/phpunit/phpunit"
-		]
-	},
-	"extra": {
-		"branch-alias": {
-			"dev-master": "2.2.x-dev"
-		}
-	},
-	"prefer-stable": true,
-	"minimum-stability": "dev"
+  "name": "silverstripe/behat-extension",
+  "type": "behat-extension",
+  "description": "SilverStripe framework extension for Behat",
+  "keywords": [
+    "framework",
+    "web",
+    "bdd",
+    "silverstripe"
+  ],
+  "homepage": "http://silverstripe.org",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Michal Ochman",
+      "email": "ochman.d.michal@gmail.com"
+    },
+    {
+      "name": "Ingo Schommer",
+      "email": "ingo@silverstripe.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.6",
+    "phpunit/phpunit": "^5.7",
+    "behat/behat": "^3.2",
+    "behat/mink": "^1.7",
+    "behat/mink-extension": "^2.1",
+    "behat/mink-selenium2-driver": "^1.3",
+    "symfony/dom-crawler": "^3",
+    "silverstripe/testsession": "2.0.0-alpha6",
+    "silverstripe/framework": "^4@dev",
+    "symfony/finder": "^3.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "SilverStripe\\BehatExtension\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-0": {
+      "SilverStripe\\BehatExtension\\Tests\\": "tests/php/"
+    },
+    "classmap": [
+      "framework",
+      "vendor/phpunit/phpunit"
+    ]
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "3.x-dev"
+    }
+  },
+  "scripts": {
+    "lint": "phpcs --standard=PSR2 -n src/ tests/php/"
+  },
+  "prefer-stable": true,
+  "minimum-stability": "dev"
 }

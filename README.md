@@ -5,9 +5,9 @@
 ## Overview
 
 [Behat](http://behat.org) is a testing framework for behaviour-driven development.
-Because it primarily interacts with your website through a browser, 
+Because it primarily interacts with your website through a browser,
 you don't need any specific integration tools to get it going with
-a basic SilverStripe website, simply follow the 
+a basic SilverStripe website, simply follow the
 [standard Behat usage instructions](http://docs.behat.org/).
 
 This extension comes in handy if you want to go beyond
@@ -40,7 +40,7 @@ Note: The extension has only been tested with the `selenium2` Mink driver.
 Simply [install SilverStripe through Composer](http://doc.silverstripe.org/framework/en/installation/composer).
 Skip this step if adding the module to an existing project.
 
-	composer create-project silverstripe/installer my-test-project 3.x-dev
+	composer create-project silverstripe/installer my-test-project 4.x-dev
 
 Switch to the newly created webroot, and add the SilverStripe Behat extension.
 
@@ -56,13 +56,13 @@ It might be older than your currently installed Firefox.
 It's important to have a browser that's [supported by Selenium-Webdriver](http://docs.seleniumhq.org/docs/01_introducing_selenium.jsp#selenium-webdriver)
 
 Now install the SilverStripe project as usual by opening it in a browser and following the instructions.
-Protip: You can skip this step by using `[SS_DATABASE_CHOOSE_NAME]` in a global 
-[`_ss_environment.php`](http://doc.silverstripe.org/framework/en/topics/environment-management) 
+Protip: You can skip this step by using `[SS_DATABASE_CHOOSE_NAME]` in a global
+[`_ss_environment.php`](http://doc.silverstripe.org/framework/en/topics/environment-management)
 file one level above the webroot.
 
 Unless you have [`$_FILE_TO_URL_MAPPING`](http://doc.silverstripe.org/framework/en/topics/commandline#configuration)
 set up, you also need to specify the URL for your webroot. Either add it to the existing `behat.yml` configuration file
-in your project root, or set is as an environment variable in your terminal session: 
+in your project root, or set is as an environment variable in your terminal session:
 
 	export BEHAT_PARAMS="extensions[SilverStripe\BehatExtension\MinkExtension][base_url]=http://localhost/"
 
@@ -94,10 +94,6 @@ Now you can run the tests (for example for the `framework` module):
 
 	vendor/bin/behat @framework
 
-In order to run specific tests only, use their feature file name:
-
-	vendor/bin/behat @framework/login.feature
-	
 Or even run a single scenario by it's name (supports regular expressions):
 
 	vendor/bin/behat --name 'My scenario title' @framework
@@ -118,77 +114,77 @@ The SilverStripe installer already comes with a YML configuration
 which is ready to run tests on a locally hosted Selenium server,
 located in the project root as `behat.yml`.
 
-You'll need to customize at least the `base_url` setting to match the URL where
-the tested SilverStripe instance is hosted locally.  This 
+You should ensure that you have configured SS_BASE_URL in your `.env`.
 
 Generic Mink configuration settings are placed in `SilverStripe\BehatExtension\MinkExtension`,
 which is a subclass of `Behat\MinkExtension\Extension`.
 
 Overview of settings (all in the `extensions.SilverStripe\BehatExtension\Extension` path):
 
- * `framework_path`: Path to the SilverStripe Framework folder. It supports both absolute and relative (to `behat.yml` file) paths.
- * `extensions.Behat\MinkExtension\Extension.base_url`: You will probably need to change the base URL that is used during the test process.
-It is used every time you use relative URLs in your feature descriptions.
-It will also be used by [file to URL mapping](http://doc.silverstripe.org/framework/en/topics/commandline#configuration) in `SilverStripeExtension`.
- * `extensions.Behat\MinkExtension\Extension.files_path`: Change to support file uploads in your tests.  Currently only absolute paths are supported.
  * `ajax_steps`: Because SilverStripe uses AJAX requests quite extensively, we had to invent a way
 to deal with them more efficiently and less verbose than just
 Optional `ajax_steps` is used to match steps defined there so they can be "caught" by
 [special AJAX handlers](http://blog.scur.pl/2012/06/ajax-callback-support-behat-mink/) that tweak the delays. You can either use a pipe delimited string or a list of substrings that match step definition.
- * `ajax_timeout`: Milliseconds after which an Ajax request is regarded as timed out, 
+ * `ajax_timeout`: Milliseconds after which an Ajax request is regarded as timed out,
  and the script continues with its assertions to avoid a deadlock (Default: 5000).
  * `screenshot_path`: Absolute path used to store screenshot of a last known state
-of a failed step. 
+of a failed step.
 Screenshot names within that directory consist of feature file filename and line
 number that failed.
 
-Example: behat.yml 
+Example: behat.yml
 
 	default:
-	  context:
-	    class: SilverStripe\MyModule\Test\Behaviour\FeatureContext
+	  suites:
+	    framework:
+          paths:
+            - %paths.modules.framework%/tests/behat/features
+          contexts:
+            - SilverStripe\Framework\Tests\Behaviour\FeatureContext
+            - SilverStripe\Framework\Tests\Behaviour\CmsFormsContext
+            - SilverStripe\Framework\Tests\Behaviour\CmsUiContext
+            - SilverStripe\BehatExtension\Context\BasicContext
+            - SilverStripe\BehatExtension\Context\EmailContext
+            - SilverStripe\BehatExtension\Context\LoginContext
+            -
+              SilverStripe\BehatExtension\Context\FixtureContext:
+                - %paths.modules.framework%/tests/behat/features/files/
 	  extensions:
-	    SilverStripe\BehatExtension\Extension:
-	      screenshot_path: %behat.paths.base%/artifacts/screenshots
-	    SilverStripe\BehatExtension\MinkExtension:
-	      # Adjust this to your local environment
-	      base_url:  http://localhost/
-	      default_session: selenium2
-	      javascript_session: selenium2
-	      selenium2:
-	        browser: firefox
+        SilverStripe\BehatExtension\MinkExtension:
+          default_session: selenium2
+          javascript_session: selenium2
+          selenium2:
+            browser: firefox
+        SilverStripe\BehatExtension\Extension:
+          screenshot_path: %paths.base%/artifacts/screenshots
 
 ## Module Initialization
 
 You're all set to start writing features now! Simply create `*.feature` files
 anywhere in your codebase, and run them as shown above. We recommend the folder
-structure of `tests/behat/features`, since its consistent with the common location 
+structure of `tests/behat/features`, since its consistent with the common location
 of SilverStripe's PHPUnit tests.
 
 Behat tests rely on a `FeatureContext` class which contains step definitions,
-and can be composed of other subcontexts, e.g. for SilverStripe-specific CMS steps 
+and can be composed of other subcontexts, e.g. for SilverStripe-specific CMS steps
 (details on [behat.org](http://docs.behat.org/quick_intro.html#the-context-class-featurecontext)).
 Since step definitions are quite domain specific, its likely that you'll need your own context.
 The SilverStripe Behat extension provides an initializer script which generates a template
 in the recommended folder structure:
 
-	vendor/bin/behat --init @mymodule
+	vendor/bin/behat --init @mymodule --namespace="MyVendor\MyModule"
 
-You'll now have a class located in `mymodule/tests/behat/features/bootstrap/Context/FeatureContext.php`,
-as well as a folder for your features with `mymodule/tests/behat/features`.
-The class is namespaced, and defaults to the module name. You can customize this:
+	Note: namespace is mandatory
 
-	vendor/bin/behat --namespace='MyVendor\MyModule' --init @mymodule
-
-In this case, you'll need to pass in the namespace when running the features as well
-(at least until SilverStripe modules allow declaring a namespace).
-
-	vendor/bin/behat --namespace='MyVendor\MyModule' @mymodule
+You'll now have a class located in `mymodule/tests/behat/src/FeatureContext.php`,
+which will have a psr-4 class mapping added to composer.json by default.
+Also a folder for your features with `mymodule/tests/behat/features` will be created.
+A `mymodule/behat.yml` is built, with a default suite named after the module.
 
 ## Available Step Definitions
 
 The extension comes with several `BehatContext` subclasses come with some extra step defintions.
-Some of them are just helpful in general website testing, other's are specific to SilverStripe. 
+Some of them are just helpful in general website testing, other's are specific to SilverStripe.
 To find out all available steps (and the files they are defined in), run the following:
 
 	vendor/bin/behat @mymodule --definitions=i
@@ -200,7 +196,7 @@ In addition to the dynamic list, a cheatsheet of available steps can be found at
 ## Fixtures
 
 Since each test run creates a new database, you can't rely on existing state unless
-you explicitly define it. 
+you explicitly define it.
 
 ### Database Defaults
 
@@ -222,22 +218,22 @@ use the inline definition syntax. The following example shows some syntax variat
 
 		Background:
 			# Creates a new page without data. Can be accessed later under this identifier
-			Given a "page" "Page 1" 
+			Given a "page" "Page 1"
 			# Uses a custom RegistrationPage type
-			And an "error page" "Register" 
-			# Creates a page with inline properties 
-			And a "page" "Page 2" with "URLSegment"="page-1" and "Content"="my page 1" 
-			# Field names can be tabular, and based on DataObject::$field_labels 
+			And an "error page" "Register"
+			# Creates a page with inline properties
+			And a "page" "Page 2" with "URLSegment"="page-1" and "Content"="my page 1"
+			# Field names can be tabular, and based on DataObject::$field_labels
 			And the "page" "Page 3" has the following data
 			 | Content | <blink> |
 			 | My Property | foo |
 			 | My Boolean | bar |
 			# Pages are published by default, can be explicitly unpublished
-			And the "page" "Page 1" is not published 
+			And the "page" "Page 1" is not published
 			# Create a hierarchy, and reference a record created earlier
-			And the "page" "Page 1.1" is a child of a "page" "Page 1" 
-			# Specific page type step 
-			And a "page" "My Redirect" which redirects to a "page" "Page 1" 
+			And the "page" "Page 1.1" is a child of a "page" "Page 1"
+			# Specific page type step
+			And a "page" "My Redirect" which redirects to a "page" "Page 1"
 			And a "member" "Website User" with "FavouritePage"="=>Page.Page 1"
 
 		@javascript
@@ -247,9 +243,9 @@ use the inline definition syntax. The following example shows some syntax variat
 			Then I should see "Page 1" in CMS Tree
 
  * Fixtures are created where you defined them. If you want the fixtures to be created
-   before every scenario, define them in [Background](http://docs.behat.org/guides/1.gherkin.html#backgrounds). 
+   before every scenario, define them in [Background](http://docs.behat.org/guides/1.gherkin.html#backgrounds).
    If you want them to be created only when a particular scenario runs, define them there.
- * Fixtures are cleared between scenarios. 
+ * Fixtures are cleared between scenarios.
  * The basic syntax works for all `DataObject` subclasses, but some specific
    notations like "is not published" requires extensions like `Hierarchy` to be applied to the class
  * Record types, identifiers, property names and property values need to be quoted
@@ -265,9 +261,10 @@ use the inline definition syntax. The following example shows some syntax variat
 ### Directory Structure
 
 As a convention, SilverStripe Behat tests live in a `tests/behat` subfolder
-of your module. You can create it with the following command:
+of your module. You can create it with the following commands:
 
-	mkdir -p mymodule/tests/behat/features/bootstrap/MyModule/Test/Behaviour
+	mkdir -p mymodule/tests/behat/features/
+	mkdir -p mymodule/tests/behat/src/
 
 ### FeatureContext
 
@@ -276,29 +273,20 @@ here as well. The only major difference is the base class from which
 to extend your own `FeatureContext`: It should be `SilverStripeContext`
 rather than `BehatContext`.
 
-Example: mymodule/tests/behat/features/bootstrap/MyModule/Test/Behaviour/FeatureContext.php
+Example: mymodule/tests/behat/src/FeatureContext.php
 
 	<?php
 	namespace MyModule\Test\Behaviour;
 
-	use SilverStripe\BehatExtension\Context\SilverStripeContext,
-	    SilverStripe\BehatExtension\Context\BasicContext,
-	    SilverStripe\BehatExtension\Context\LoginContext;
+	use SilverStripe\BehatExtension\Context\SilverStripeContext;
 
 	class FeatureContext extends SilverStripeContext
 	{
-	    public function __construct(array $parameters)
-	    {
-	        $this->useContext('BasicContext', new BasicContext($parameters));
-	        $this->useContext('LoginContext', new LoginContext($parameters));
-
-	        parent::__construct($parameters);
-	    }
 	}
 
 ### Screen Size
 
-In some Selenium drivers you can 
+In some Selenium drivers you can
 define the desired browser window size through a `capabilities` definition.
 By default, Selenium doesn't support this though, so we've added a workaround
 through an environment variable:
@@ -308,7 +296,7 @@ through an environment variable:
 ### Inspecting PHP sessions
 
 Behat is executed from CLI, which in turn triggers web requests in a browser.
-This browser session is associated PHP session information such as the logged-in user. 
+This browser session is associated PHP session information such as the logged-in user.
 After every request, the session information is persisted on disk as part
 of the `TestSessionEnvironment`, in order to share it with Behat CLI.
 
@@ -360,7 +348,7 @@ It is possible to include your own fixtures, it is explained further.
 ### Why do tests pass in a fresh installation, but fail in my own project?
 
 Because we're testing the interface directly, any changes to the
-viewed elements have the potential to disrupt testing. 
+viewed elements have the potential to disrupt testing.
 By building a test database from scratch, we're trying to minimize this impact.
 Some examples where things can go wrong nevertheless:
 
@@ -388,7 +376,7 @@ methods, it is possible to delay the step execution by adding the following step
 
     And I put a breakpoint
 
-This will stop the execution of the tests until you press the return key in the 
+This will stop the execution of the tests until you press the return key in the
 terminal. This is very useful when you want to look at the error or developer console
 inside the browser or if you want to interact with the session page manually.
 
@@ -597,7 +585,7 @@ It's based on the `vendor/bin/behat -di @cms` output.
 	Given /^I (?:press|follow) the "([^"]*)" (?:button|link), confirming the dialog$/
 
 	Given /^I (?:press|follow) the "([^"]*)" (?:button|link), dismissing the dialog$/
-    
+
     Given /^I (click|double click) "([^"]*)" in the "([^"]*)" element, confirming the dialog$/
 
     Given /^I (click|double click) "([^"]*)" in the "([^"]*)" element, dismissing the dialog$/
@@ -622,7 +610,7 @@ It's based on the `vendor/bin/behat -di @cms` output.
 ### CMS UI
 
 	 Then /^I should see an edit page form$/
-	 
+
 	 Then /^I should see the CMS$/
 
 	 Then /^I should see a "([^"]*)" notice$/
@@ -679,7 +667,7 @@ It's based on the `vendor/bin/behat -di @cms` output.
 
 	Given /^(?:(an|a|the) )"group" "(?<id>[^"]+)" (?:(with|has)) permissions (?<permissionStr>.*)$/
 	    - Example: Given a "group" "Admin" with permissions "Access to 'Pages' section" and "Access to 'Files' section"
-	
+
 	Given /^I assign (?:(an|a|the) )"(?<type>[^"]+)" "(?<value>[^"]+)" to (?:(an|a|the) )"(?<relationType>[^"]+)" "(?<relationId>[^"]+)"$/
 	    - Example: I assign the "TaxonomyTerm" "For customers" to the "Page" "Page1"
 
@@ -698,7 +686,7 @@ It's based on the `vendor/bin/behat -di @cms` output.
 ### Email
 
 	Given /^there should (not |)be an email (to|from) "([^"]*)"$/
-	
+
 	Given /^there should (not |)be an email (to|from) "([^"]*)" titled "([^"]*)"$/
 
 	Given /^the email should (not |)contain "([^"]*)"$/
@@ -723,7 +711,7 @@ It's based on the `vendor/bin/behat -di @cms` output.
 
     When /^I click on the http link "([^"]*)" in the email$/
         - Example: When I click on the http link "http://localhost/changepassword" in the email
- 
+
 ### Transformations
 
 Behat [transformations](http://docs.behat.org/guides/2.definitions.html#step-argument-transformations)
@@ -731,8 +719,8 @@ have the ability to change step arguments based on their original value,
 for example to cast any argument matching the `\d` regex into an actual PHP integer.
 
  * `/^(?:(the|a)) time of (?<val>.*)$/`: Transforms relative time statements compatible with [strtotime()](http://www.php.net/manual/en/datetime.formats.relative.php). Example: "the time of 1 hour ago" might return "22:00:00" if its currently "23:00:00".
- * `/^(?:(the|a)) date of (?<val>.*)$/`: Transforms relative date statements compatible with [strtotime()](http://www.php.net/manual/en/datetime.formats.relative.php). Example: "the date of 2 days ago" might return "2013-10-10" if its currently the 12th of October 2013. 
- * `/^(?:(the|a)) datetime of (?<val>.*)$/`: Transforms relative date and time statements compatible with [strtotime()](http://www.php.net/manual/en/datetime.formats.relative.php). Example: "the datetime of 2 days ago" might return "2013-10-10 23:00:00" if its currently the 12th of October 2013. 
+ * `/^(?:(the|a)) date of (?<val>.*)$/`: Transforms relative date statements compatible with [strtotime()](http://www.php.net/manual/en/datetime.formats.relative.php). Example: "the date of 2 days ago" might return "2013-10-10" if its currently the 12th of October 2013.
+ * `/^(?:(the|a)) datetime of (?<val>.*)$/`: Transforms relative date and time statements compatible with [strtotime()](http://www.php.net/manual/en/datetime.formats.relative.php). Example: "the datetime of 2 days ago" might return "2013-10-10 23:00:00" if its currently the 12th of October 2013.
 
 ## Useful resources
 

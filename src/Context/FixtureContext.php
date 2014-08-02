@@ -2,30 +2,36 @@
 
 namespace SilverStripe\BehatExtension\Context;
 
-use Behat\Behat\Context\BehatContext;
-use Behat\Behat\Event\ScenarioEvent;
+use Behat\Behat\Context\Context;
+use Behat\Behat\Hook\Scope\AfterScenarioScope;
+use Behat\Behat\Hook\Scope\BeforeScenarioScope;
 use Behat\Gherkin\Node\PyStringNode;
 use Behat\Gherkin\Node\TableNode;
+use Exception;
+use InvalidArgumentException;
 use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Storage\AssetStore;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Dev\BehatFixtureFactory;
+use SilverStripe\Dev\FixtureBlueprint;
 use SilverStripe\Dev\FixtureFactory;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Dev\YamlFixture;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
+use SilverStripe\Security\Group;
+use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
-
-// PHPUnit
-require_once BASE_PATH . '/vendor/phpunit/phpunit/src/Framework/Assert/Functions.php';
 
 /**
  * Context used to create fixtures in the SilverStripe ORM.
  */
-class FixtureContext extends BehatContext
+class FixtureContext implements Context
 {
+    use MainContextAwareTrait;
+
     protected $context;
 
     /**
@@ -50,14 +56,16 @@ class FixtureContext extends BehatContext
      */
     protected $createdAssets = array();
 
-    public function __construct(array $parameters)
+    /**
+     * FixtureContext constructor.
+     * @param null $filesPath
+     */
+    public function __construct($filesPath = null)
     {
-        $this->context = $parameters;
-    }
-
-    public function getSession($name = null)
-    {
-        return $this->getMainContext()->getSession($name);
+        if (empty($filesPath)) {
+            throw new InvalidArgumentException("filesPath is required");
+        }
+        $this->setFilesPath($filesPath);
     }
 
     /**
@@ -66,12 +74,31 @@ class FixtureContext extends BehatContext
     public function getFixtureFactory()
     {
         if (!$this->fixtureFactory) {
-            $this->fixtureFactory = Injector::inst()->create(
-                'SilverStripe\\Dev\\FixtureFactory',
-                'FixtureContextFactory'
-            );
+            $this->fixtureFactory = $this->scaffoldDefaultFixtureFactory();
         }
         return $this->fixtureFactory;
+    }
+
+
+    /**
+     * Build default fixture factory
+     *
+     * @return FixtureFactory
+     */
+    protected function scaffoldDefaultFixtureFactory()
+    {
+        $fixtureFactory = Injector::inst()->create(BehatFixtureFactory::class);
+
+        // Register blueprints
+        /** @var FixtureBlueprint $blueprint */
+        $blueprint = Injector::inst()->create(FixtureBlueprint::class, Member::class);
+        $blueprint->addCallback('beforeCreate', function ($identifier, &$data, &$fixtures) {
+            if (!isset($data['FirstName'])) {
+                $data['FirstName'] = $identifier;
+            }
+        });
+        $fixtureFactory->define(Member::class, $blueprint);
+        return $fixtureFactory;
     }
 
     /**
@@ -100,12 +127,14 @@ class FixtureContext extends BehatContext
 
     /**
      * @BeforeScenario @database-defaults
+     *
+     * @param BeforeScenarioScope $event
      */
-    public function beforeDatabaseDefaults(ScenarioEvent $event)
+    public function beforeDatabaseDefaults(BeforeScenarioScope $event)
     {
         SapphireTest::empty_temp_db();
         DB::get_conn()->quiet();
-        $dataClasses = ClassInfo::subclassesFor('SilverStripe\\ORM\\DataObject');
+        $dataClasses = ClassInfo::subclassesFor(DataObject::class);
         array_shift($dataClasses);
         foreach ($dataClasses as $dataClass) {
             \singleton($dataClass)->requireDefaultRecords();
@@ -114,16 +143,18 @@ class FixtureContext extends BehatContext
 
     /**
      * @AfterScenario
+     * @param AfterScenarioScope $event
      */
-    public function afterResetDatabase(ScenarioEvent $event)
+    public function afterResetDatabase(AfterScenarioScope $event)
     {
         SapphireTest::empty_temp_db();
     }
 
     /**
      * @AfterScenario
+     * @param AfterScenarioScope $event
      */
-    public function afterResetAssets(ScenarioEvent $event)
+    public function afterResetAssets(AfterScenarioScope $event)
     {
         $store = $this->getAssetStore();
         if (is_array($this->createdAssets)) {
@@ -137,18 +168,24 @@ class FixtureContext extends BehatContext
      * Example: Given a "page" "Page 1"
      *
      * @Given /^(?:an|a|the) "([^"]+)" "([^"]+)"$/
+     * @param string $type
+     * @param string $id
      */
     public function stepCreateRecord($type, $id)
     {
         $class = $this->convertTypeToClass($type);
         $fields = $this->prepareFixture($class, $id);
-        $this->fixtureFactory->createObject($class, $id, $fields);
+        $this->getFixtureFactory()->createObject($class, $id, $fields);
     }
 
     /**
      * Example: Given a "page" "Page 1" has the "content" "My content"
      *
      * @Given /^(?:an|a|the) "([^"]+)" "([^"]+)" has (?:an|a|the) "(.*)" "(.*)"$/
+     * @param string $type
+     * @param string $id
+     * @param string $field
+     * @param string $value
      */
     public function stepCreateRecordHasField($type, $id, $field, $value)
     {
@@ -158,14 +195,14 @@ class FixtureContext extends BehatContext
             array($field => $value)
         );
         // We should check if this fixture object already exists - if it does, we update it. If not, we create it
-        if ($existingFixture = $this->fixtureFactory->get($class, $id)) {
+        if ($existingFixture = $this->getFixtureFactory()->get($class, $id)) {
             // Merge existing data with new data, and create new object to replace existing object
             foreach ($fields as $k => $v) {
                 $existingFixture->$k = $v;
             }
             $existingFixture->write();
         } else {
-            $this->fixtureFactory->createObject($class, $id, $fields);
+            $this->getFixtureFactory()->createObject($class, $id, $fields);
         }
     }
 
@@ -174,6 +211,9 @@ class FixtureContext extends BehatContext
      * Example: Given the "page" "Page 1" has "URL"="page-1" and "Content"="my page 1"
      *
      * @Given /^(?:an|a|the) "([^"]+)" "([^"]+)" (?:with|has) (".*)$/
+     * @param string $type
+     * @param string $id
+     * @param string $data
      */
     public function stepCreateRecordWithData($type, $id, $data)
     {
@@ -189,14 +229,14 @@ class FixtureContext extends BehatContext
         );
         $fields = $this->prepareFixture($class, $id, $fields);
         // We should check if this fixture object already exists - if it does, we update it. If not, we create it
-        if ($existingFixture = $this->fixtureFactory->get($class, $id)) {
+        if ($existingFixture = $this->getFixtureFactory()->get($class, $id)) {
             // Merge existing data with new data, and create new object to replace existing object
             foreach ($fields as $k => $v) {
                 $existingFixture->$k = $v;
             }
             $existingFixture->write();
         } else {
-            $this->fixtureFactory->createObject($class, $id, $fields);
+            $this->getFixtureFactory()->createObject($class, $id, $fields);
         }
     }
 
@@ -207,6 +247,10 @@ class FixtureContext extends BehatContext
      * | My Boolean | bar |
      *
      * @Given /^(?:an|a|the) "([^"]+)" "([^"]+)" has the following data$/
+     * @param string $type
+     * @param string $id
+     * @param string $null
+     * @param TableNode $fieldsTable
      */
     public function stepCreateRecordWithTable($type, $id, $null, TableNode $fieldsTable)
     {
@@ -232,6 +276,11 @@ class FixtureContext extends BehatContext
      * Note that this change is not published by default
      *
      * @Given /^(?:an|a|the) "([^"]+)" "([^"]+)" is a ([^\s]*) of (?:an|a|the) "([^"]+)" "([^"]+)"/
+     * @param string $type
+     * @param string $id
+     * @param string $relation
+     * @param string $relationType
+     * @param string $relationId
      */
     public function stepUpdateRecordRelation($type, $id, $relation, $relationType, $relationId)
     {
@@ -265,7 +314,7 @@ class FixtureContext extends BehatContext
                 // already written through $data above
                 break;
             default:
-                throw new \InvalidArgumentException(sprintf(
+                throw new InvalidArgumentException(sprintf(
                     'Invalid relation "%s"',
                     $relation
                 ));
@@ -278,6 +327,10 @@ class FixtureContext extends BehatContext
      *
      * @example I assign the "TaxonomyTerm" "For customers" to the "Page" "Page1"
      * @Given /^I assign (?:an|a|the) "([^"]+)" "([^"]+)" to (?:an|a|the) "([^"]+)" "([^"]+)"$/
+     * @param string $type
+     * @param string $value
+     * @param string $relationType
+     * @param string $relationId
      */
     public function stepIAssignObjToObj($type, $value, $relationType, $relationId)
     {
@@ -291,6 +344,12 @@ class FixtureContext extends BehatContext
      *
      * @example I assign the "TaxonomyTerm" "For customers" to the "Page" "Page1" in the "Terms" relation
      * @Given /^I assign (?:an|a|the) "([^"]+)" "([^"]+)" to (?:an|a|the) "([^"]+)" "([^"]+)" in the "([^"]+)" relation$/
+     * @param string $type
+     * @param string $value
+     * @param string $relationType
+     * @param string $relationId
+     * @param string $relationName
+     * @throws Exception
      */
     public function stepIAssignObjToObjInTheRelation($type, $value, $relationType, $relationId, $relationName)
     {
@@ -298,28 +357,28 @@ class FixtureContext extends BehatContext
         $relationClass = $this->convertTypeToClass($relationType);
 
         // Check if this fixture object already exists - if not, we create it
-        $relationObj = $this->fixtureFactory->get($relationClass, $relationId);
+        $relationObj = $this->getFixtureFactory()->get($relationClass, $relationId);
         if (!$relationObj) {
-            $relationObj = $this->fixtureFactory->createObject($relationClass, $relationId);
+            $relationObj = $this->getFixtureFactory()->createObject($relationClass, $relationId);
         }
 
         // Check if there is relationship defined in many_many (includes belongs_many_many)
         $manyField = null;
         $oneField = null;
-        if ($relationObj->many_many()) {
-            $manyField = array_search($class, $relationObj->many_many());
+        if ($relationObj->manyMany()) {
+            $manyField = array_search($class, $relationObj->manyMany());
             if ($manyField && strlen($relationName) > 0) {
                 $manyField = $relationName;
             }
         }
-        if (empty($manyField) && $relationObj->has_many()) {
-            $manyField = array_search($class, $relationObj->has_many());
+        if (empty($manyField) && $relationObj->hasMany(true)) {
+            $manyField = array_search($class, $relationObj->hasMany());
             if ($manyField && strlen($relationName) > 0) {
                 $manyField = $relationName;
             }
         }
-        if (empty($manyField) && $relationObj->has_one()) {
-            $oneField = array_search($class, $relationObj->has_one());
+        if (empty($manyField) && $relationObj->hasOne()) {
+            $oneField = array_search($class, $relationObj->hasOne());
             if ($oneField && strlen($relationName) > 0) {
                 $oneField = $relationName;
             }
@@ -341,7 +400,7 @@ class FixtureContext extends BehatContext
         // Check if the fixture object exists - if not, we create it
         $obj = DataObject::get($class)->filter($field, $value)->first();
         if (!$obj) {
-            $obj = $this->fixtureFactory->createObject($class, $value);
+            $obj = $this->getFixtureFactory()->createObject($class, $value);
         }
         // If has_many or many_many, add this fixture object to the relation object
         // If has_one, set value to the joint field with this fixture object's ID
@@ -360,14 +419,17 @@ class FixtureContext extends BehatContext
      * Example: Given the "page" "Page 1" is not published
      *
      * @Given /^(?:an|a|the) "([^"]+)" "([^"]+)" is ([^"]*)$/
+     * @param string $type
+     * @param string $id
+     * @param string $state
      */
     public function stepUpdateRecordState($type, $id, $state)
     {
         $class = $this->convertTypeToClass($type);
         /** @var DataObject|Versioned $obj */
-        $obj = $this->fixtureFactory->get($class, $id);
+        $obj = $this->getFixtureFactory()->get($class, $id);
         if (!$obj) {
-            throw new \InvalidArgumentException(sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Can not find record "%s" with identifier "%s"',
                 $type,
                 $id
@@ -390,7 +452,7 @@ class FixtureContext extends BehatContext
                 $obj->delete();
                 break;
             default:
-                throw new \InvalidArgumentException(sprintf(
+                throw new InvalidArgumentException(sprintf(
                     'Invalid state: "%s"',
                     $state
                 ));
@@ -407,10 +469,12 @@ class FixtureContext extends BehatContext
      *    Email: member2@test.com
      *
      * @Given /^there are the following ([^\s]*) records$/
+     * @param string $dataObject
+     * @param PyStringNode $string
      */
     public function stepThereAreTheFollowingRecords($dataObject, PyStringNode $string)
     {
-        $yaml = array_merge(array($dataObject . ':'), $string->getLines());
+        $yaml = array_merge(array($dataObject . ':'), $string->getStrings());
         $yaml = implode("\n  ", $yaml);
 
         // Save fixtures into database
@@ -423,15 +487,19 @@ class FixtureContext extends BehatContext
      * Example: Given a "member" "Admin" belonging to "Admin Group"
      *
      * @Given /^(?:an|a|the) "member" "([^"]+)" belonging to "([^"]+)"$/
+     * @param string $id
+     * @param string $groupId
      */
     public function stepCreateMemberWithGroup($id, $groupId)
     {
-        $group = $this->fixtureFactory->get('SilverStripe\\Security\\Group', $groupId);
+        /** @var Group $group */
+        $group = $this->getFixtureFactory()->get(Group::class, $groupId);
         if (!$group) {
-            $group = $this->fixtureFactory->createObject('SilverStripe\\Security\\Group', $groupId);
+            $group = $this->getFixtureFactory()->createObject(Group::class, $groupId);
         }
 
-        $member = $this->fixtureFactory->createObject('SilverStripe\\Security\\Member', $id);
+        /** @var Member $member */
+        $member = $this->getFixtureFactory()->createObject(Member::class, $id);
         $member->Groups()->add($group);
     }
 
@@ -439,26 +507,30 @@ class FixtureContext extends BehatContext
      * Example: Given a "member" "Admin" belonging to "Admin Group" with "Email"="test@test.com"
      *
      * @Given /^(?:an|a|the) "member" "([^"]+)" belonging to "([^"]+)" with (.*)$/
+     * @param string $id
+     * @param string $groupId
+     * @param string $data
      */
     public function stepCreateMemberWithGroupAndData($id, $groupId, $data)
     {
-        $class = 'SilverStripe\\Security\\Member';
         preg_match_all(
             '/"(?<key>[^"]+)"\s*=\s*"(?<value>[^"]+)"/',
             $data,
             $matches
         );
         $fields = $this->convertFields(
-            $class,
+            Member::class,
             array_combine($matches['key'], $matches['value'])
         );
 
-        $group = $this->fixtureFactory->get('SilverStripe\\Security\\Group', $groupId);
+        /** @var Group $group */
+        $group = $this->getFixtureFactory()->get(Group::class, $groupId);
         if (!$group) {
-            $group = $this->fixtureFactory->createObject('SilverStripe\\Security\\Group', $groupId);
+            $group = $this->getFixtureFactory()->createObject(Group::class, $groupId);
         }
 
-        $member = $this->fixtureFactory->createObject($class, $id, $fields);
+        /** @var Member $member */
+        $member = $this->getFixtureFactory()->createObject(Member::class, $id, $fields);
         $member->Groups()->add($group);
     }
 
@@ -466,6 +538,8 @@ class FixtureContext extends BehatContext
      * Example: Given a "group" "Admin" with permissions "Access to 'Pages' section" and "Access to 'Files' section"
      *
      * @Given /^(?:an|a|the) "group" "([^"]+)" (?:with|has) permissions (.*)$/
+     * @param string $id
+     * @param string $permissionStr
      */
     public function stepCreateGroupWithPermissions($id, $permissionStr)
     {
@@ -474,9 +548,9 @@ class FixtureContext extends BehatContext
         $permissions = $matches[1];
         $codes = Permission::get_codes(false);
 
-        $group = $this->fixtureFactory->get('SilverStripe\\Security\\Group', $id);
+        $group = $this->getFixtureFactory()->get(Group::class, $id);
         if (!$group) {
-            $group = $this->fixtureFactory->createObject('SilverStripe\\Security\\Group', $id);
+            $group = $this->getFixtureFactory()->createObject(Group::class, $id);
         }
 
         foreach ($permissions as $permission) {
@@ -490,7 +564,7 @@ class FixtureContext extends BehatContext
                 }
             }
             if (!$found) {
-                throw new \InvalidArgumentException(sprintf(
+                throw new InvalidArgumentException(sprintf(
                     'No permission found for "%s"',
                     $permission
                 ));
@@ -504,22 +578,25 @@ class FixtureContext extends BehatContext
      * Example: Given I go to the "page" "My Page"
      *
      * @Given /^I go to (?:an|a|the) "([^"]+)" "([^"]+)"/
+     * @param string $type
+     * @param string $id
      */
     public function stepGoToNamedRecord($type, $id)
     {
         $class = $this->convertTypeToClass($type);
-        $record = $this->fixtureFactory->get($class, $id);
+        $record = $this->getFixtureFactory()->get($class, $id);
         if (!$record) {
-            throw new \InvalidArgumentException(sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Cannot resolve reference "%s", no matching fixture found',
                 $id
             ));
         }
         if (!$record->hasMethod('RelativeLink')) {
-            throw new \InvalidArgumentException('URL for record cannot be determined, missing RelativeLink() method');
+            throw new InvalidArgumentException('URL for record cannot be determined, missing RelativeLink() method');
         }
+        $link = call_user_func([$record, 'RelativeLink']);
 
-        $this->getSession()->visit($this->getMainContext()->locatePath($record->RelativeLink()));
+        $this->getMainContext()->getSession()->visit($this->getMainContext()->locatePath($link));
     }
 
 
@@ -528,6 +605,8 @@ class FixtureContext extends BehatContext
      * Example: There should be a file "assets/Uploads/test.jpg"
      *
      * @Then /^there should be a ((file|folder) )"([^"]*)"/
+     * @param string $type
+     * @param string $path
      */
     public function stepThereShouldBeAFileOrFolder($type, $path)
     {
@@ -540,6 +619,8 @@ class FixtureContext extends BehatContext
      * Example: there should be a filename "Uploads/test.jpg" with hash "59de0c841f"
      *
      * @Then /^there should be a filename "([^"]*)" with hash "([a-fA-Z0-9]+)"/
+     * @param string $filename
+     * @param string $hash
      */
     public function stepThereShouldBeAFileWithTuple($filename, $hash)
     {
@@ -552,14 +633,16 @@ class FixtureContext extends BehatContext
      * with the notation "=><class>.<identifier>". Example: "=>Page.My Page".
      *
      * @Transform /^([^"]+)$/
+     * @param string $string
+     * @return mixed
      */
     public function lookupFixtureReference($string)
     {
         if (preg_match('/^=>/', $string)) {
             list($className, $identifier) = explode('.', preg_replace('/^=>/', '', $string), 2);
-            $id = $this->fixtureFactory->getId($className, $identifier);
+            $id = $this->getFixtureFactory()->getId($className, $identifier);
             if (!$id) {
-                throw new \InvalidArgumentException(sprintf(
+                throw new InvalidArgumentException(sprintf(
                     'Cannot resolve reference "%s", no matching fixture found',
                     $string
                 ));
@@ -572,12 +655,16 @@ class FixtureContext extends BehatContext
 
     /**
      * @Given /^(?:an|a|the) "([^"]*)" "([^"]*)" was (created|last edited) "([^"]*)"$/
+     * @param string $type
+     * @param string $id
+     * @param string $mod
+     * @param string $time
      */
     public function aRecordWasLastEditedRelative($type, $id, $mod, $time)
     {
         $class = $this->convertTypeToClass($type);
         $fields = $this->prepareFixture($class, $id);
-        $record = $this->fixtureFactory->createObject($class, $id, $fields);
+        $record = $this->getFixtureFactory()->createObject($class, $id, $fields);
         $date = date("Y-m-d H:i:s", strtotime($time));
         $table = $record->baseTable();
         $field = ($mod == 'created') ? 'Created' : 'LastEdited';
@@ -628,7 +715,7 @@ class FixtureContext extends BehatContext
         } else {
             // Check file exists
             if (!file_exists($sourcePath)) {
-                throw new \InvalidArgumentException(sprintf(
+                throw new InvalidArgumentException(sprintf(
                     'Source file for "%s" cannot be found in "%s"',
                     $relativeTargetPath,
                     $sourcePath
@@ -707,7 +794,7 @@ class FixtureContext extends BehatContext
             }
         }
 
-        throw new \InvalidArgumentException(sprintf(
+        throw new InvalidArgumentException(sprintf(
             'Class "%s" does not exist, or is not a subclass of DataObjet',
             $class
         ));

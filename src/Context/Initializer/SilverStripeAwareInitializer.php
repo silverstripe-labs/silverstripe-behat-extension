@@ -2,10 +2,9 @@
 
 namespace SilverStripe\BehatExtension\Context\Initializer;
 
-use Behat\Behat\Context\Initializer\InitializerInterface;
-use Behat\Behat\Context\ContextInterface;
-use SilverStripe\BehatExtension\Context\SilverStripeAwareContextInterface;
-use SilverStripe\Core\Injector\Injector;
+use Behat\Behat\Context\Initializer\ContextInitializer;
+use Behat\Behat\Context\Context;
+use SilverStripe\BehatExtension\Context\SilverStripeAwareContext;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\TestSession\TestSessionEnvironment;
 
@@ -24,7 +23,7 @@ use SilverStripe\TestSession\TestSessionEnvironment;
  *
  * @author Michał Ochman <ochman.d.michal@gmail.com>
  */
-class SilverStripeAwareInitializer implements InitializerInterface
+class SilverStripeAwareInitializer implements ContextInitializer
 {
 
     private $databaseName;
@@ -59,12 +58,12 @@ class SilverStripeAwareInitializer implements InitializerInterface
      */
     protected $testSessionEnvironment;
 
+    protected $regionMap;
+
     /**
      * Initializes initializer.
-     *
-     * @param string $frameworkPath
      */
-    public function __construct($frameworkPath)
+    public function __construct()
     {
         file_put_contents('php://stdout', 'Bootstrapping' . PHP_EOL);
 
@@ -104,22 +103,24 @@ class SilverStripeAwareInitializer implements InitializerInterface
     /**
      * Checks if initializer supports provided context.
      *
-     * @param ContextInterface $context
-     *
+     * @param Context $context
      * @return Boolean
      */
-    public function supports(ContextInterface $context)
+    public function supports(Context $context)
     {
-        return $context instanceof SilverStripeAwareContextInterface;
+        return $context instanceof SilverStripeAwareContext;
     }
 
     /**
      * Initializes provided context.
      *
-     * @param ContextInterface $context
+     * @param Context $context
      */
-    public function initialize(ContextInterface $context)
+    public function initializeContext(Context $context)
     {
+        if (! $context instanceof SilverStripeAwareContext) {
+            return;
+        }
         $context->setDatabase($this->databaseName);
         $context->setAjaxSteps($this->ajaxSteps);
         $context->setAjaxTimeout($this->ajaxTimeout);

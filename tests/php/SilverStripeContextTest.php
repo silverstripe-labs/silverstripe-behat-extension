@@ -1,8 +1,14 @@
 <?php
+
 namespace SilverStripe\BehatExtension\Tests;
 
-use SilverStripe\BehatExtension\Context\SilverStripeContext;
+use Behat\Mink\Element\DocumentElement;
+use Behat\Mink\Selector\SelectorsHandler;
+use Behat\Mink\Session;
 use Behat\Mink\Mink;
+use Behat\Mink\Driver\DriverInterface;
+use Behat\Mink\Element\Element;
+use SilverStripe\BehatExtension\Tests\SilverStripeContextTest\FeatureContext;
 
 class SilverStripeContextTest extends \PHPUnit_Framework_TestCase
 {
@@ -56,16 +62,19 @@ class SilverStripeContextTest extends \PHPUnit_Framework_TestCase
         $this->assertNotNull($obj);
     }
 
+    /**
+     * @return FeatureContext
+     */
     protected function getContextMock()
     {
-        $pageMock = $this->getMockBuilder('Behat\Mink\Element\DocumentElement')
+        $pageMock = $this->getMockBuilder(DocumentElement::class)
             ->disableOriginalConstructor()
             ->setMethods(array('find'))
             ->getMock();
-        $sessionMock = $this->getMockBuilder('Behat\Mink\Session')
+        $sessionMock = $this->getMockBuilder(Session::class)
             ->setConstructorArgs(array(
-                $this->getMockBuilder('Behat\Mink\Driver\DriverInterface')->getMock(),
-                $this->getMockBuilder('Behat\Mink\Selector\SelectorsHandler')->getMock()
+                $this->getMockBuilder(DriverInterface::class)->getMock(),
+                $this->getMockBuilder(SelectorsHandler::class)->getMock()
             ))
             ->setMethods(array('getPage'))
             ->getMock();
@@ -75,15 +84,18 @@ class SilverStripeContextTest extends \PHPUnit_Framework_TestCase
         $mink = new Mink(array('default' => $sessionMock));
         $mink->setDefaultSessionName('default');
 
-        $context = new SilverStripeContext(array());
+        $context = new FeatureContext(array());
         $context->setMink($mink);
 
         return $context;
     }
 
+    /**
+     * @return Element|\PHPUnit_Framework_MockObject_MockObject
+     */
     protected function getElementMock()
     {
-        return $this->getMockBuilder('Behat\Mink\Element\Element')
+        return $this->getMockBuilder(Element::class)
             ->disableOriginalConstructor()
             ->getMock();
     }
