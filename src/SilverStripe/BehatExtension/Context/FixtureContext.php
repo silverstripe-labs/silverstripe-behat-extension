@@ -535,5 +535,30 @@ class FixtureContext extends BehatContext
 		if (substr($args[0], 0, 1) == '/') $paths[0] = '/' . $paths[0];
 		return join('/', $paths);
 	}
-   
+
+	/**
+	 * @example I assign the tags "For home;For business" to the "Page" "Page1"
+	 * @example I assign the tag "For home" to the "Page" "Page1"
+	 * @Given /^I assign the tag(?:|s) "([^"]*)" to the "(?<objType>[^"]+)" "(?<objId>[^"]+)"/
+	 */
+	public function stepIAssignTagsTo($tags, $objType, $objId) {
+		$class = "TaxonomyTerm";
+		$relationClass = $this->convertTypeToClass($objType);
+
+		// Check if this fixture object already exists - if not, we create it
+		$relationObj = $this->fixtureFactory->get($relationClass, $objId);
+		if(!$relationObj) $relationObj = $this->fixtureFactory->createObject($relationClass, $objId);
+
+		// Split tags
+		$objTags = explode(";", $tags);
+		foreach($objTags as $tag) {
+			// Check if the tag exists - if not then create it
+			$obj = $this->fixtureFactory->get($class, $tag);
+			if(!$obj) $obj = $this->fixtureFactory->createObject($class, $tag);
+			// Add tag to the destination object
+			$relationObj->Tags()->add($obj);
+		}
+
+		$relationObj->write();
+	}
 }
