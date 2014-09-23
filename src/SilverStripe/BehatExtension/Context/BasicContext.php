@@ -800,4 +800,96 @@ JS;
 			assertTrue(strpos($text, $textBefore) > strpos($text, $textAfter));
 		}
 	}
+
+	/**
+	 * Checks, that element with specified CSS contains specified style.
+	 * @example I should see the style "width:280px" in the ".header" element
+	 * @Then /^(?:|I )should (not |)see the style "(?P<style>(?:[^"]|\\")*)" in the "(?P<selector>[^"]*)" element$/
+	 */
+	public function iSeeStyleInTheElement($negate, $style, $selector) {
+		$page = $this->getSession()->getPage();
+		$element = $page->find('css', $selector);
+		assertNotNull($element, "The element '$selector' not found!");
+		// The "style" attribute means the html tag "style" in the page source code
+		// Neither computed style nor CSS style
+		$attribute = $element->getAttribute('style');
+		assertNotNull($attribute, "The Style attribute of the element '$selector' is not found!");
+
+		$message = "Actual style: '$attribute'";
+		if($negate) {
+			assertTrue(strpos($attribute, $style) === false, $message);
+		} else {
+			assertTrue(strpos($attribute, $style) !== false, $message);
+		}
+	}
+
+	/**
+	 * Checks, that element with specified CSS contains specified computed style.
+	 * @example I should see the computed style "width:280px" in the ".header" element
+	 * @Then /^(?:|I )should (not |)see the computed style "(?P<style>(?:[^"]|\\")*)" in the "(?P<selector>[^"]*)" element$/
+	 */
+	public function iSeeComputedStyleInTheElement($negate, $style, $selector) {
+		$page = $this->getSession()->getPage();
+		$element = $page->find('css', $selector);
+		assertNotNull($element, "The element '$selector' not found!");
+		$className = $element->getAttribute('class');
+		assertNotNull($className, "The className of the element '$selector' is not found!");
+
+		$javascript = <<<JS
+elem1 = document.getElementsByClassName('$className')[0];
+var result = window.getComputedStyle(elem1, null);
+elem1.setAttribute("tempAttribute", result);
+JS;
+
+		// Execute JavaScript to get all CSS rules
+		$this->getSession()->executeScript($javascript);
+		// Get CSS rules from an attribute set in above JavaScript
+		$attribute = $element->getAttribute('tempAttribute');
+
+		$message = "Actual computed style: '$attribute'";
+		if($negate) {
+			assertTrue(strpos($attribute, $style) === false, $message);
+		} else {
+			assertTrue(strpos($attribute, $style) !== false, $message);
+		}
+	}
+
+	/**
+	 * Checks, that element with specified CSS contains specified CSS style.
+	 * @example I should see the CSS style "width:280px" in the ".header" element
+	 * @Then /^(?:|I )should (not |)see the CSS style "(?P<style>(?:[^"]|\\")*)" in the "(?P<selector>[^"]*)" element$/
+	 */
+	public function iSeeCssStyleInTheElement($negate, $style, $selector) {
+		$page = $this->getSession()->getPage();
+		$element = $page->find('css', $selector);
+		assertNotNull($element, "The element '$selector' not found!");
+		$className = $element->getAttribute('class');
+		assertNotNull($className, "The className of the element '$selector' is not found!");
+
+		$javascript = <<<JS
+ele = document.getElementsByClassName('$className')[0];
+var sheets = document.styleSheets, result = [];
+ele.matches = ele.matches || ele.webkitMatchesSelector || ele.mozMatchesSelector || ele.msMatchesSelector || ele.oMatchesSelector;
+for (var i in sheets) {
+	var rules = sheets[i].rules || sheets[i].cssRules;
+	for (var r in rules) {
+		if (ele.matches(rules[r].selectorText)) {
+			result.push(rules[r].cssText);
+		}
+	}
+}
+ele.setAttribute("tempAttribute", result);
+JS;
+		// Execute JavaScript to get all CSS rules
+		$this->getSession()->executeScript($javascript);
+		// Get CSS rules from an attribute set in above JavaScript
+		$attribute = $element->getAttribute('tempAttribute');
+
+		$message = "Actual CSS style: '$attribute'";
+		if($negate) {
+			assertTrue(strpos($attribute, $style) === false, $message);
+		} else {
+			assertTrue(strpos($attribute, $style) !== false, $message);
+		}
+	}
 }
