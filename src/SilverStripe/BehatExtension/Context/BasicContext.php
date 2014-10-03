@@ -800,4 +800,41 @@ JS;
 			assertTrue(strpos($text, $textBefore) > strpos($text, $textAfter));
 		}
 	}
+
+	/**
+	 * @When /^I scroll to page bottom$/
+	 */
+	public function iScrollToBottom() {
+		$javascript = 'window.scrollTo(0, Math.max(document.documentElement.scrollHeight, document.body.scrollHeight, document.documentElement.clientHeight));';
+		$this->getSession()->executeScript($javascript);
+	}
+
+	/**
+	 * @When /^I scroll to page top$/
+	 */
+	public function iScrollToTop() {
+		$this->getSession()->executeScript('window.scrollTo(0,0);');
+	}
+
+	/**
+	 * @When /^I scroll to "(?P<locator>(?:[^"]|\\")*)"$/
+	 */
+	public function iScrollToElement($locator) {
+		$element = $this->getSession()->getPage()->find('css', $locator);
+		assertNotNull($element, sprintf('The element "%s" is not found', $locator));
+		$id = $element->getAttribute('id');
+		$name = $element->getAttribute('name');
+		$className = $element->getAttribute('class');
+		$javascript = null;
+		if(!empty($id)) {
+			$javascript = sprintf("document.getElementById('%s').scrollIntoView(true);", $id);
+		} else if(!empty($name)) {
+			$javascript = sprintf("document.getElementsByName('%s')[0].scrollIntoView(true);", $name);
+		} else if(!empty($className)) {
+			$javascript = sprintf("document.getElementsByClassName('%s')[0].scrollIntoView(true);", $className);
+		} else {
+			user_error("No id/name/class found for element: " . $locator, E_USER_ERROR);
+		}
+		$this->getSession()->executeScript($javascript);
+	}
 }
