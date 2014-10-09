@@ -10,15 +10,16 @@ parameters:
   behat.silverstripe_extension.admin_url: ~
   behat.silverstripe_extension.login_url: ~
   behat.silverstripe_extension.screenshot_path: ~
+  behat.silverstripe_extension.use_test_session: true
   behat.silverstripe_extension.module:
   behat.silverstripe_extension.region_map: ~
   behat.silverstripe_extension.context.path_suffix: tests/behat/features/
 services:
   behat.silverstripe_extension.context.initializer:
     class: %behat.silverstripe_extension.context.initializer.class%
-    arguments:
-      - %behat.silverstripe_extension.framework_path%
     calls:
+      - [setFrameworkPath, [%behat.silverstripe_extension.framework_path%]]
+      - [setUseTestSession, [%behat.silverstripe_extension.use_test_session%]]
       - [setAjaxSteps, [%behat.silverstripe_extension.ajax_steps%]]
       - [setAjaxTimeout, [%behat.silverstripe_extension.ajax_timeout%]]
       - [setAdminUrl, [%behat.silverstripe_extension.admin_url%]]

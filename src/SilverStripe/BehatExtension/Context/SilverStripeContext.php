@@ -27,6 +27,9 @@ require_once 'vendor/autoload.php';
  */
 class SilverStripeContext extends MinkContext implements SilverStripeAwareContextInterface
 {
+
+	protected $useTestSession;
+
 	protected $databaseName;
 
 	/**
@@ -74,6 +77,10 @@ class SilverStripeContext extends MinkContext implements SilverStripeAwareContex
 		// Initialize your context here
 		$this->context = $parameters;
 		$this->testSessionEnvironment = new \TestSessionEnvironment();
+	}
+
+	public function setUseTestSession($bool) {
+		$this->useTestSession = $bool;
 	}
 
 	public function setDatabase($databaseName) {
@@ -180,29 +187,31 @@ class SilverStripeContext extends MinkContext implements SilverStripeAwareContex
 	 * @BeforeScenario
 	 */
 	public function before(ScenarioEvent $event) {
-		if (!isset($this->databaseName)) {
-			throw new \LogicException(
-				'Context\'s $databaseName has to be set when implementing SilverStripeAwareContextInterface.'
-			);
-		}
+		if($this->useTestSession) {
+			if (!isset($this->databaseName)) {
+				throw new \LogicException(
+					'Context\'s $databaseName has to be set when implementing SilverStripeAwareContextInterface.'
+				);
+			}
 
-		$state = $this->getTestSessionState();
-		$this->testSessionEnvironment->startTestSession($state);
+			$state = $this->getTestSessionState();
+			$this->testSessionEnvironment->startTestSession($state);
 
-		// Optionally import database
-		if(!empty($state['importDatabasePath'])) {
-			$this->testSessionEnvironment->importDatabase(
-				$state['importDatabasePath'],
-				!empty($state['requireDefaultRecords']) ? $state['requireDefaultRecords'] : false
-			);
-		} else if(!empty($state['requireDefaultRecords']) && $state['requireDefaultRecords']) {
-			$this->testSessionEnvironment->requireDefaultRecords();
-		}
+			// Optionally import database
+			if(!empty($state['importDatabasePath'])) {
+				$this->testSessionEnvironment->importDatabase(
+					$state['importDatabasePath'],
+					!empty($state['requireDefaultRecords']) ? $state['requireDefaultRecords'] : false
+				);
+			} else if(!empty($state['requireDefaultRecords']) && $state['requireDefaultRecords']) {
+				$this->testSessionEnvironment->requireDefaultRecords();
+			}
 
-		// Fixtures
-		$fixtureFile = (!empty($params['fixture'])) ? $params['fixture'] : null;
-		if($fixtureFile) {
-			$this->testSessionEnvironment->loadFixtureIntoDb($fixtureFile);
+			// Fixtures
+			$fixtureFile = (!empty($params['fixture'])) ? $params['fixture'] : null;
+			if($fixtureFile) {
+				$this->testSessionEnvironment->loadFixtureIntoDb($fixtureFile);
+			}
 		}
 
 		if($screenSize = getenv('BEHAT_SCREEN_SIZE')) {

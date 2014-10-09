@@ -24,8 +24,8 @@ use SilverStripe\BehatExtension\Context\SilverStripeAwareContextInterface;
  */
 class SilverStripeAwareInitializer implements InitializerInterface
 {
-    
-    private $databaseName;
+
+    protected $databaseName;
     
     /**
      * @var Array
@@ -57,40 +57,38 @@ class SilverStripeAwareInitializer implements InitializerInterface
 	 */
 	protected $testSessionEnvironment;
 
-    /**
-     * Initializes initializer.
-     */
-    public function __construct($frameworkPath)
-    {
-        $this->bootstrap($frameworkPath);
+	protected $frameworkPath;
 
+    protected $useTestSession;
+
+	protected $bootstrapInitialized = false;
+
+	protected $testSessionInitialized = false;
+
+	public function initTestSession() {
 		file_put_contents('php://stdout', "Creating test session environment" . PHP_EOL);
 
 		$testEnv = \Injector::inst()->get('TestSessionEnvironment');
-		$testEnv->startTestSession(array(
-			'createDatabase' => true
-		));
+		$testEnv->startTestSession();
 
 		$state = $testEnv->getState();
-
 		$this->databaseName = $state->database;
 		$this->testSessionEnvironment = $testEnv;
 
 		file_put_contents('php://stdout', "Temp Database: $this->databaseName" . PHP_EOL . PHP_EOL);
 
-        register_shutdown_function(array($this, '__destruct'));
-    }
+		register_shutdown_function(array($this, 'killTestSession'));
+	}
 
-    public function __destruct()
-    {
-        file_put_contents('php://stdout', "Killing test session environment...");
+	public function killTestSession() {
+		file_put_contents('php://stdout', "Killing test session environment...");
 
-        if($this->testSessionEnvironment) {
-            $this->testSessionEnvironment->endTestSession();
-        }
+		if($this->testSessionEnvironment) {
+			$this->testSessionEnvironment->endTestSession();
+		}
 
-        file_put_contents('php://stdout', " done!" . PHP_EOL);
-    }
+		file_put_contents('php://stdout', " done!" . PHP_EOL);
+	}
 
     /**
      * Checks if initializer supports provided context.
@@ -111,6 +109,7 @@ class SilverStripeAwareInitializer implements InitializerInterface
      */
     public function initialize(ContextInterface $context)
     {
+        $context->setUseTestSession($this->useTestSession);
         $context->setDatabase($this->databaseName);
         $context->setAjaxSteps($this->ajaxSteps);
         $context->setAjaxTimeout($this->ajaxTimeout);
@@ -118,6 +117,26 @@ class SilverStripeAwareInitializer implements InitializerInterface
         $context->setRegionMap($this->regionMap);
         $context->setAdminUrl($this->adminUrl);
         $context->setLoginUrl($this->loginUrl);
+
+		if(!$this->bootstrapInitialized) {
+			$this->bootstrap();
+			$this->bootstrapInitialized = true;
+		}
+
+        if($this->useTestSession && !$this->testSessionInitialized) {
+			$this->initTestSession();
+			$this->testSessionInitialized = true;
+        }
+    }
+
+    public function setFrameworkPath($path)
+    {
+        $this->frameworkPath = $path;
+    }
+
+    public function setUseTestSession($bool)
+    {
+        $this->useTestSession = $bool;
     }
 
     public function setAjaxSteps($ajaxSteps)
@@ -178,16 +197,13 @@ class SilverStripeAwareInitializer implements InitializerInterface
         $this->regionMap = $regionMap;
     }
 
-    /**
-     * @param String Absolute path to 'framework' module
-     */
-    protected function bootstrap($frameworkPath)
+    protected function bootstrap()
     {
         file_put_contents('php://stdout', 'Bootstrapping' . PHP_EOL);
 
         // Connect to database and build manifest
         $_GET['flush'] = 1;
-        require_once $frameworkPath . '/core/Core.php';
+        require_once $this->frameworkPath . '/core/Core.php';
         unset($_GET['flush']);
 
         // Remove the error handler so that PHPUnit can add its own
