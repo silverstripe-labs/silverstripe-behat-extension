@@ -137,12 +137,17 @@ class SilverStripeContext extends MinkContext implements SilverStripeAwareContex
 	 * @return MinkElement|null
 	 */
 	public function getRegionObj($region) {
+		$regionObj = null;
+		$startsWithNumber = is_numeric(substr($region, 0, 1));
+		
 		// Try to find regions directly by CSS selector.
-		$regionObj = $this->getSession()->getPage()->find(
-			'css',
-			// Escape CSS selector
-			(false !== strpos($region, "'")) ? str_replace("'", "\'", $region) : $region
-		);
+		if(!$startsWithNumber){ // conditional, otherwise will throw a syntax error
+			$regionObj = $this->getSession()->getPage()->find(
+				'css',
+				// Escape CSS selector
+				(false !== strpos($region, "'")) ? str_replace("'", "\'", $region) : $region
+			);
+		}
 		if($regionObj) {
 			return $regionObj;
 		}
