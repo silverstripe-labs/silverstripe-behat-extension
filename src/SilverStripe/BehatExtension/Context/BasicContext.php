@@ -942,4 +942,69 @@ JS;
             $backtrace[1]['function']
         ));
     }
+
+	/**
+	 * Check the value set in an input textbox(visible)
+	 * Note: this is a match with trimmed whitespace, the element is visible
+	 * @example: Then the value in the "username" field should be "John Smith"
+	 * @Then /^the value in the "(?P<field>(?:[^"]|\\")*)" field should be "(?P<value>(?:[^"]|\\")*)"$/
+	 */
+	public function theValueInFieldShouldBe($field, $value) {
+		$field = $this->fixStepArgument($field);
+		$value = $this->fixStepArgument($value);
+
+		$eles = $this->getSession()->getPage()->findAll('named', array('field', "'$field'"));
+		$inputField = null;
+		foreach($eles as $ele) {
+			if($ele->isVisible()) { 
+				$inputField = $ele;
+				break;
+			}
+		}
+		
+		assertNotNull($inputField, sprintf('The field "%s" not found or not visible', $field));
+
+		$actualValue = $inputField->getValue();
+		assertNotNull($actualValue, sprintf('No value found for the field "%s"', $field));
+		$actualValue = trim($actualValue);
+
+		assertEquals($value, $actualValue, 
+			sprintf('The actual value "%s" is not equal to the expected value "%s"', $actualValue, $value)
+		);
+	}
+
+	/**
+	 * Check the default option in a dropdown box
+	 * @example the option "option1" in the selectbox "my select" should be selected
+	 * @Then /^the option "([^"]*)" in the selectbox "([^"]*)" should (not |)be selected$/
+	 */
+	public function inShouldNotBeSelected($optionValue, $select, $negate) {
+		$selectElement = $this->getSession()->getPage()->find('named', array('select', "\"{$select}\""));
+		assertNotNull($selectElement);
+		$optionElement = $selectElement->find('named', array('option', "\"{$optionValue}\""));
+		assertNotNull($optionElement);
+		//it should have the attribute selected and it should be set to selected
+		if($negate) {
+			assertFalse($optionElement->isSelected());
+		} else {
+			assertTrue($optionElement->isSelected());
+		}
+	}
+
+	/**
+	 * Check the options in a dropdown box
+	 * @example I should not see "option1" in the selectbox "my select"
+	 * @Then /^I should (not |)see "([^"]*)" in the selectbox "([^"]*)"$/
+	 */
+	public function inShouldNotSeeOption($negate, $optionValue, $select) {
+		$selectElement = $this->getSession()->getPage()->find('named', array('select', "\"{$select}\""));
+		assertNotNull($selectElement);
+		$optionElement = $selectElement->find('named', array('option', "\"{$optionValue}\""));
+
+		if($negate) {
+			assertNull($optionElement);
+		} else {
+			assertNotNull($optionElement);
+		}
+	}
 }
