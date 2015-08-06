@@ -701,6 +701,9 @@ It's based on the `vendor/bin/behat -di @cms` output.
 	Then /^the email should (not |)contain the following data:$/
 		Example: Then the email should contain the following data:
 
+	@Then /^the value in the "(?P<field>(?:[^"]|\\")*)" field should be "(?P<value>(?:[^"]|\\")*)"$/
+		- Example: Then the value in the "username" field should be "John Smith"
+
 ### Transformations
 
 Behat [transformations](http://docs.behat.org/guides/2.definitions.html#step-argument-transformations)
