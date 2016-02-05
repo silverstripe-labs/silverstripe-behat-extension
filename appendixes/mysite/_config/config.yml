@@ -1,0 +1,9 @@
+TestSessionEnvironment:
+  extensions:
+    - FakeManagerTestSessionExtension
+  database_templates_path: mysite/tests/fixtures
+
+TestSessionController:
+  extensions:
+    - FakeManagerTestSessionExtension
+  database_templates_path: mysite/tests/fixtures
