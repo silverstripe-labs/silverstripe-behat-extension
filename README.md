@@ -92,6 +92,10 @@ Now you can run the tests (for example for the `framework` module):
 In order to run specific tests only, use their feature file name:
 
 	vendor/bin/behat @framework/login.feature
+	
+Or even run a single scenario by it's name (supports regular expressions):
+
+	vendor/bin/behat --name 'My scenario title' @framework
 
 This will start a Firefox browser by default. Other browsers and profiles can be configured in `behat.yml`.
 
@@ -580,13 +584,17 @@ It's based on the `vendor/bin/behat -di @cms` output.
 
 	Given /^I press the "([^"]*)" button$/
 
-	Given /^I click "([^"]*)" in the "([^"]*)" element$/
+	Given /^I (click|double click) "([^"]*)" in the "([^"]*)" element$/
 
 	Given /^I type "([^"]*)" into the dialog$/
 
 	Given /^I (?:press|follow) the "([^"]*)" (?:button|link), confirming the dialog$/
 
 	Given /^I (?:press|follow) the "([^"]*)" (?:button|link), dismissing the dialog$/
+    
+    Given /^I (click|double click) "([^"]*)" in the "([^"]*)" element, confirming the dialog$/
+
+    Given /^I (click|double click) "([^"]*)" in the "([^"]*)" element, dismissing the dialog$/
 
 	Given /^I confirm the dialog$/
 
@@ -700,6 +708,12 @@ It's based on the `vendor/bin/behat -di @cms` output.
 
 	Then /^the email should (not |)contain the following data:$/
 		Example: Then the email should contain the following data:
+
+	Then /^there should (not |)be an email titled "([^"]*)"$/
+
+	Then /^the email should (not |)be sent from "([^"]*)"$/
+
+	Then /^the email should (not |)be sent to "([^"]*)"$/
 
 ### Transformations
 

@@ -2,13 +2,10 @@
 
 namespace SilverStripe\BehatExtension\Context;
 
-use Behat\Behat\Context\ClosuredContextInterface,
-    Behat\Behat\Context\TranslatedContextInterface,
-    Behat\Behat\Context\BehatContext,
+use Behat\Behat\Context\BehatContext,
     Behat\Behat\Context\Step,
     Behat\Behat\Event\StepEvent,
-    Behat\Behat\Event\ScenarioEvent,
-    Behat\Behat\Exception\PendingException;
+    Behat\Behat\Event\ScenarioEvent;
 
 use Behat\Mink\Driver\Selenium2Driver;
 
@@ -268,8 +265,9 @@ JS;
      */
 	public function cleanAssetsAfterScenario(ScenarioEvent $event) {
         foreach(\File::get() as $file) {
-            if(file_exists($file->getFullPath())) $file->delete();
+            $file->delete();
         }
+		\Filesystem::removeFolder(ASSETS_PATH, true);
     }
 
     public function takeScreenshot(StepEvent $event) {
@@ -383,19 +381,42 @@ JS;
     }
 
     /**
-     * @Given /^I click "([^"]*)" in the "([^"]*)" element$/
+     * @Given /^I (click|double click) "([^"]*)" in the "([^"]*)" element$/
      */
-	public function iClickInTheElement($text, $selector) {
+    public function iClickInTheElement($clickType, $text, $selector) {
+        $clickTypeMap = array(
+            "double click" => "doubleclick",
+            "click" => "click"
+        );
         $page = $this->getSession()->getPage();
-
         $parentElement = $page->find('css', $selector);
         assertNotNull($parentElement, sprintf('"%s" element not found', $selector));
-
         $element = $parentElement->find('xpath', sprintf('//*[count(*)=0 and contains(.,"%s")]', $text));
         assertNotNull($element, sprintf('"%s" not found', $text));
-
-        $element->click();
+        $clickTypeFn = $clickTypeMap[$clickType];
+        $element->$clickTypeFn();
     }
+    
+    /**
+    * Needs to be in single command to avoid "unexpected alert open" errors in Selenium.
+    * Example: I click "Delete" in the ".actions" element, confirming the dialog
+    *
+    * @Given /^I (click|double click) "([^"]*)" in the "([^"]*)" element, confirming the dialog$/
+    */
+   public function iClickInTheElementConfirmingTheDialog($clickType, $text, $selector) {
+       $this->iClickInTheElement($clickType, $text, $selector);
+       $this->iConfirmTheDialog();
+   }
+   /**
+    * Needs to be in single command to avoid "unexpected alert open" errors in Selenium.
+    * Example: I click "Delete" in the ".actions" element, dismissing the dialog
+    *
+    * @Given /^I (click|double click) "([^"]*)" in the "([^"]*)" element, dismissing the dialog$/
+    */
+   public function iClickInTheElementDismissingTheDialog($clickType, $text, $selector) {
+       $this->iClickInTheElement($clickType, $text, $selector);
+       $this->iDismissTheDialog();
+   }
 
     /**
      * @Given /^I type "([^"]*)" into the dialog$/

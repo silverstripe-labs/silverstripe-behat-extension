@@ -83,13 +83,13 @@ class SilverStripeAwareInitializer implements InitializerInterface
 
     public function __destruct()
     {
-        file_put_contents('php://stdout', "Killing test session environment...");
-
+        // Add condition here as register_shutdown_function() also calls this in __construct()
         if($this->testSessionEnvironment) {
+            file_put_contents('php://stdout', "Killing test session environment...");
             $this->testSessionEnvironment->endTestSession();
+            $this->testSessionEnvironment = null;
+            file_put_contents('php://stdout', " done!" . PHP_EOL);
         }
-
-        file_put_contents('php://stdout', " done!" . PHP_EOL);
     }
 
     /**

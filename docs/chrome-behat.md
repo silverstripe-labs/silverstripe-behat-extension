@@ -10,7 +10,6 @@ If you would like to run Behat Tests using Google Chrome here are a few steps I 
 ```
       default_session: selenium2
       javascript_session: selenium2
-      goutte: ~
       selenium2:
         browser: chrome
     SilverStripe\BehatExtension\Extension:

@@ -32,7 +32,7 @@
 		"symfony/yaml": "~2.0",
 		"symfony/finder": "~2.0",
 		"silverstripe/testsession": "*",
-		"silverstripe/framework": ">=3.1.0"
+		"silverstripe/framework": "^4.0.0"
 	},
 
 	"autoload": {
@@ -49,6 +49,11 @@
 			"framework",
 			"vendor/phpunit/phpunit"
 		]
+	},
+	"extra": {
+		"branch-alias": {
+			"dev-master": "2.0.x-dev"
+		}
 	},
 	"minimum-stability": "dev"
 }
