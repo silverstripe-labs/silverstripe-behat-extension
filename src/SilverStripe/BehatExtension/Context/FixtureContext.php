@@ -9,8 +9,7 @@ use Behat\Behat\Context\BehatContext,
 	SilverStripe\Filesystem\Storage\AssetStore;
 
 // PHPUnit
-require_once 'PHPUnit/Autoload.php';
-require_once 'PHPUnit/Framework/Assert/Functions.php';
+require_once BASE_PATH . '/vendor/phpunit/phpunit/src/Framework/Assert/Functions.php';
 
 /**
  * Context used to create fixtures in the SilverStripe ORM.

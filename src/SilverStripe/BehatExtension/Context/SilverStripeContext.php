@@ -20,6 +20,8 @@ use Symfony\Component\Yaml\Yaml;
 // Mink etc.
 require_once 'vendor/autoload.php';
 
+require_once BASE_PATH . '/vendor/phpunit/phpunit/src/Framework/Assert/Functions.php';
+
 /**
  * SilverStripeContext
  *

@@ -13,8 +13,7 @@ use Behat\Gherkin\Node\PyStringNode,
     Behat\Gherkin\Node\TableNode;
 
 // PHPUnit
-require_once 'PHPUnit/Autoload.php';
-require_once 'PHPUnit/Framework/Assert/Functions.php';
+require_once BASE_PATH . '/vendor/phpunit/phpunit/src/Framework/Assert/Functions.php';
 
 /**
  * BasicContext

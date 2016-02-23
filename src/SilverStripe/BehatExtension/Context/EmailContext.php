@@ -14,8 +14,7 @@ Behat\Gherkin\Node\TableNode;
 use Symfony\Component\DomCrawler\Crawler;
 
 // PHPUnit
-require_once 'PHPUnit/Autoload.php';
-require_once 'PHPUnit/Framework/Assert/Functions.php';
+require_once BASE_PATH . '/vendor/phpunit/phpunit/src/Framework/Assert/Functions.php';
 
 /**
  * Context used to define steps related to email sending.
