@@ -47,6 +47,10 @@ Switch to the newly created webroot, and add the SilverStripe Behat extension.
 	cd my-test-project
 	composer require "silverstripe/behat-extension:*"
 
+Run the following Shell script to help you setup Behat test session environment.
+
+	sh vendor/silverstripe/behat-extension/appendixes/SS-behat-quick-setup.sh
+
 Now get the latest Selenium2 server (requires Java):
 
 	wget http://selenium-release.storage.googleapis.com/2.44/selenium-server-standalone-2.44.0.jar

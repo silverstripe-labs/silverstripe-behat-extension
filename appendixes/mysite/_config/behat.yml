@@ -1,0 +1,6 @@
+---
+name: behat
+---
+TestSessionEnvironment:
+  test_state_file: 'assets/TESTS_RUNNING.json'
+  test_state_id_file: 'assets/TESTS_RUNNING-%s.json'
