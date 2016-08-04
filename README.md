@@ -722,6 +722,9 @@ It's based on the `vendor/bin/behat -di @cms` output.
 
 	Then /^the email should (not |)be sent to "([^"]*)"$/
 
+	When /^I click on the http link "([^"]*)" in the email$/
+		- Example: When I click on the http link "http://localhost/changepassword" in the email
+
 ### Transformations
 
 Behat [transformations](http://docs.behat.org/guides/2.definitions.html#step-argument-transformations)
