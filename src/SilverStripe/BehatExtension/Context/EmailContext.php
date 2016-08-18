@@ -313,4 +313,34 @@ class EmailContext extends BehatContext
             assertContains($to, $match->To);
         }
     }
+
+    /**
+     * The link text is the link address itself which contains special characters
+     * e.g. http://localhost/Security/changepassword?m=199&title=reset
+     * Example: When I click on the http link "changepassword" in the email
+     * @When /^I click on the http link "([^"]*)" in the email$/
+     */
+    public function iClickOnHttpLinkInEmail($httpText) {
+        if(!$this->lastMatchedEmail) {
+            throw new \LogicException('No matched email found from previous step');
+        }
+
+        $email = $this->lastMatchedEmail;
+        $html = $email->Content;
+        $dom = new \DOMDocument();
+        $dom->loadHTML($html);
+
+        $tags = $dom->getElementsByTagName('a');
+        $href = null;
+        foreach ($tags as $tag) {
+            $linkText = $tag->nodeValue;
+            if(strpos($linkText, $httpText) !== false) {
+                $href = $linkText;
+                break;
+            }
+        }
+        assertNotNull($href);
+
+        return new Step\When(sprintf('I go to "%s"', $href));
+    }
 }
