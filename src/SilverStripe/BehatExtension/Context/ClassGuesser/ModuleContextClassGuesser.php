@@ -46,7 +46,7 @@ class ModuleContextClassGuesser implements ClassGuesserInterface
         // Try fully qualified namespace
         if (class_exists($class = $this->namespaceBase.'\\'.$this->namespaceSuffix.'\\'.$this->contextClass)) {
             return $class;
-        } 
+        }
         // Fall back to namespace with SilverStripe prefix
         // TODO Remove once core has namespace capabilities for modules
         if (class_exists($class = 'SilverStripe\\'.$this->namespaceBase.'\\'.$this->namespaceSuffix.'\\'.$this->contextClass)) {

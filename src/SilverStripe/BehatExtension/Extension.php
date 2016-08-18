@@ -2,10 +2,10 @@
 
 namespace SilverStripe\BehatExtension;
 
-use Symfony\Component\Config\FileLocator,
-    Symfony\Component\DependencyInjection\ContainerBuilder,
-    Symfony\Component\DependencyInjection\Loader\YamlFileLoader,
-    Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 
 use Behat\Behat\Extension\ExtensionInterface;
 
@@ -41,7 +41,8 @@ class Extension implements ExtensionInterface
         $loader->load('silverstripe.yml');
 
         $behatBasePath = $container->getParameter('behat.paths.base');
-        $config['framework_path'] = realpath(sprintf('%s%s%s',
+        $config['framework_path'] = realpath(sprintf(
+            '%s%s%s',
             rtrim($behatBasePath, DIRECTORY_SEPARATOR),
             DIRECTORY_SEPARATOR,
             ltrim($config['framework_path'], DIRECTORY_SEPARATOR)
@@ -59,7 +60,7 @@ class Extension implements ExtensionInterface
             $container->setParameter('behat.silverstripe_extension.ajax_steps', $config['ajax_steps']);
         }
         if (isset($config['region_map'])) {
-             $container->setParameter('behat.silverstripe_extension.region_map', $config['region_map']);
+            $container->setParameter('behat.silverstripe_extension.region_map', $config['region_map']);
         }
     }
 
@@ -78,7 +79,7 @@ class Extension implements ExtensionInterface
      *
      * @param ArrayNodeDefinition $builder
      */
-    function getConfig(ArrayNodeDefinition $builder)
+    public function getConfig(ArrayNodeDefinition $builder)
     {
         $builder->
             children()->

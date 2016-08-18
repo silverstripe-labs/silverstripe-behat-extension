@@ -27,8 +27,8 @@ interface SilverStripeAwareContextInterface
 
     /**
      * Marks steps as AJAX steps for special treatment
-     * 
+     *
      * @param array $ajax_steps Array of step name parts to match
      */
-     public function setAjaxSteps($ajaxSteps);
+    public function setAjaxSteps($ajaxSteps);
 }

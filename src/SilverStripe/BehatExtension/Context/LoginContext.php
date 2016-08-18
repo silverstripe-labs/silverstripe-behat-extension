@@ -8,8 +8,6 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Group;
 use SilverStripe\Security\Member;
 
-
-
 // PHPUnit
 require_once BASE_PATH . '/vendor/phpunit/phpunit/src/Framework/Assert/Functions.php';
 
@@ -70,7 +68,7 @@ class LoginContext extends BehatContext
      *
      * @Given /^I am logged in with "([^"]*)" permissions$/
      */
-    function iAmLoggedInWithPermissions($permCode)
+    public function iAmLoggedInWithPermissions($permCode)
     {
         if (!isset($this->cache_generatedMembers[$permCode])) {
             $group = Group::get()->filter('Title', "$permCode group")->first();
@@ -132,8 +130,8 @@ class LoginContext extends BehatContext
 
         // Try to find visible forms again on login page.
         $visibleForm = null;
-        foreach($forms as $form) {
-            if($form->isVisible() && $form->find('css', '[name=Email]')) {
+        foreach ($forms as $form) {
+            if ($form->isVisible() && $form->find('css', '[name=Email]')) {
                 $visibleForm = $form;
             }
         }

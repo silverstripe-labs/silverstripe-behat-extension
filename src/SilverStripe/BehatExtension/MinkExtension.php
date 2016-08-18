@@ -16,5 +16,4 @@ class MinkExtension extends \Behat\MinkExtension\Extension
             parent::getCompilerPasses()
         );
     }
-
 }

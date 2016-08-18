@@ -2,11 +2,11 @@
 
 namespace SilverStripe\BehatExtension\Console\Processor;
 
-use Symfony\Component\DependencyInjection\ContainerInterface,
-    Symfony\Component\Console\Command\Command,
-    Symfony\Component\Console\Input\InputArgument,
-    Symfony\Component\Console\Input\InputInterface,
-    Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 use Behat\Behat\Console\Processor\LocatorProcessor as BaseProcessor;
 
@@ -34,7 +34,9 @@ class LocatorProcessor extends BaseProcessor
      */
     public function configure(Command $command)
     {
-        $command->addArgument('features', InputArgument::OPTIONAL,
+        $command->addArgument(
+            'features',
+            InputArgument::OPTIONAL,
             "Feature(s) to run. Could be:".
             "\n- a dir (<comment>src/to/module/Features/</comment>), " .
             "\n- a feature (<comment>src/to/module/Features/*.feature</comment>), " .
@@ -91,7 +93,7 @@ class LocatorProcessor extends BaseProcessor
             $featuresPath = $currentModulePath.DIRECTORY_SEPARATOR.$pathSuffix.DIRECTORY_SEPARATOR.$featuresPath;
         }
 
-        if($input->getOption('namespace')) {
+        if ($input->getOption('namespace')) {
             $namespace = $input->getOption('namespace');
         } else {
             $namespace = ucfirst($currentModuleName);

@@ -2,8 +2,8 @@
 
 namespace SilverStripe\BehatExtension\Compiler;
 
-use Symfony\Component\DependencyInjection\ContainerBuilder,
-    Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 
 /**
  * Loads SilverStripe core. Required to initialize autoloading.
@@ -22,7 +22,7 @@ class CoreInitializationPass implements CompilerPassInterface
         $_GET['flush'] = 1;
         require_once $frameworkPath . '/core/Core.php';
         
-        if(class_exists('TestRunner')) {
+        if (class_exists('TestRunner')) {
             // 3.x compat
             \TestRunner::use_test_manifest();
         } else {

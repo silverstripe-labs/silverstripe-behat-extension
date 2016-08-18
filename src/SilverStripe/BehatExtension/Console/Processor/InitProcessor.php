@@ -2,12 +2,12 @@
 
 namespace SilverStripe\BehatExtension\Console\Processor;
 
-use Symfony\Component\DependencyInjection\ContainerInterface,
-    Symfony\Component\Console\Command\Command,
-    Symfony\Component\Console\Input\InputArgument,
-    Symfony\Component\Console\Input\InputInterface,
-    Symfony\Component\Console\Output\OutputInterface,
-    Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputOption;
 
 use Behat\Behat\Console\Processor\InitProcessor as BaseProcessor;
 
@@ -33,7 +33,10 @@ class InitProcessor extends BaseProcessor
     {
         parent::configure($command);
         
-        $command->addOption('--namespace', null, InputOption::VALUE_OPTIONAL,
+        $command->addOption(
+            '--namespace',
+            null,
+            InputOption::VALUE_OPTIONAL,
             "Optional namespace for FeatureContext, defaults to <foldername>\\Test\\Behaviour.\n"
         );
     }
@@ -68,7 +71,7 @@ class InitProcessor extends BaseProcessor
         unset($_GET['flush']);
 
         $featuresPath = $input->getArgument('features');
-        if(!$featuresPath) {
+        if (!$featuresPath) {
             throw new \InvalidArgumentException('Please specify a module name (e.g. "@mymodule")');
         }
 
@@ -86,21 +89,21 @@ class InitProcessor extends BaseProcessor
                 throw new \InvalidArgumentException(sprintf('Module "%s" not found', $currentModuleName));
             }
             $currentModulePath = $modules[$currentModuleName];
-        } 
+        }
 
         if (!$currentModuleName) {
             throw new \InvalidArgumentException('Can not find module to initialize suite.');
         }
 
         // TODO Retrieve from module definition once that's implemented
-        if($input->getOption('namespace')) {
+        if ($input->getOption('namespace')) {
             $namespace = $input->getOption('namespace');
         } else {
             $namespace = ucfirst($currentModuleName);
         }
         $namespace .= '\\' . $this->container->getParameter('behat.silverstripe_extension.context.namespace_suffix');
 
-        $featuresPath = rtrim($currentModulePath.DIRECTORY_SEPARATOR.$pathSuffix,DIRECTORY_SEPARATOR);
+        $featuresPath = rtrim($currentModulePath.DIRECTORY_SEPARATOR.$pathSuffix, DIRECTORY_SEPARATOR);
         $basePath     = $this->container->getParameter('behat.paths.base').DIRECTORY_SEPARATOR;
         $bootstrapPath = $featuresPath.DIRECTORY_SEPARATOR.'bootstrap';
         $contextPath  = $bootstrapPath.DIRECTORY_SEPARATOR.'Context';
@@ -140,7 +143,7 @@ class InitProcessor extends BaseProcessor
      */
     protected function getFeatureContextSkelet()
     {
-return <<<'PHP'
+        return <<<'PHP'
 <?php
 
 namespace %NAMESPACE%;

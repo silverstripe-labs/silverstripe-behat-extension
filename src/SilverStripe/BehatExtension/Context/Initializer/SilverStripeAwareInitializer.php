@@ -2,8 +2,8 @@
 
 namespace SilverStripe\BehatExtension\Context\Initializer;
 
-use Behat\Behat\Context\Initializer\InitializerInterface,
-Behat\Behat\Context\ContextInterface;
+use Behat\Behat\Context\Initializer\InitializerInterface;
+use Behat\Behat\Context\ContextInterface;
 
 use SilverStripe\BehatExtension\Context\SilverStripeAwareContextInterface;
 
@@ -52,10 +52,10 @@ class SilverStripeAwareInitializer implements InitializerInterface
      */
     protected $screenshotPath;
 
-	/**
-	 * @var object {@link TestSessionEnvironment}
-	 */
-	protected $testSessionEnvironment;
+    /**
+     * @var object {@link TestSessionEnvironment}
+     */
+    protected $testSessionEnvironment;
 
     /**
      * Initializes initializer.
@@ -64,19 +64,19 @@ class SilverStripeAwareInitializer implements InitializerInterface
     {
         $this->bootstrap($frameworkPath);
 
-		file_put_contents('php://stdout', "Creating test session environment" . PHP_EOL);
+        file_put_contents('php://stdout', "Creating test session environment" . PHP_EOL);
 
-		$testEnv = \Injector::inst()->get('TestSessionEnvironment');
-		$testEnv->startTestSession(array(
-			'createDatabase' => true
-		));
+        $testEnv = \Injector::inst()->get('TestSessionEnvironment');
+        $testEnv->startTestSession(array(
+            'createDatabase' => true
+        ));
 
-		$state = $testEnv->getState();
+        $state = $testEnv->getState();
 
-		$this->databaseName = $state->database;
-		$this->testSessionEnvironment = $testEnv;
+        $this->databaseName = $state->database;
+        $this->testSessionEnvironment = $testEnv;
 
-		file_put_contents('php://stdout', "Temp Database: $this->databaseName" . PHP_EOL . PHP_EOL);
+        file_put_contents('php://stdout', "Temp Database: $this->databaseName" . PHP_EOL . PHP_EOL);
 
         register_shutdown_function(array($this, '__destruct'));
     }
@@ -84,7 +84,7 @@ class SilverStripeAwareInitializer implements InitializerInterface
     public function __destruct()
     {
         // Add condition here as register_shutdown_function() also calls this in __construct()
-        if($this->testSessionEnvironment) {
+        if ($this->testSessionEnvironment) {
             file_put_contents('php://stdout', "Killing test session environment...");
             $this->testSessionEnvironment->endTestSession();
             $this->testSessionEnvironment = null;
@@ -122,7 +122,9 @@ class SilverStripeAwareInitializer implements InitializerInterface
 
     public function setAjaxSteps($ajaxSteps)
     {
-        if($ajaxSteps) $this->ajaxSteps = $ajaxSteps;
+        if ($ajaxSteps) {
+            $this->ajaxSteps = $ajaxSteps;
+        }
     }
 
     public function getAjaxSteps()
@@ -170,11 +172,13 @@ class SilverStripeAwareInitializer implements InitializerInterface
         return $this->screenshotPath;
     }
 
-    public function getRegionMap(){
+    public function getRegionMap()
+    {
         return $this->regionMap;
     }
 
-    public function setRegionMap($regionMap) {
+    public function setRegionMap($regionMap)
+    {
         $this->regionMap = $regionMap;
     }
 
