@@ -2,13 +2,14 @@
 
 namespace SilverStripe\BehatExtension\Console\Processor;
 
-use SilverStripe\Core\Manifest\SS_ClassLoader;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Behat\Behat\Console\Processor\InitProcessor as BaseProcessor;
+use SilverStripe\Core\Manifest\ClassLoader;
+
 
 /**
  * Initializes a project for Behat usage, creating context files.
@@ -77,7 +78,7 @@ class InitProcessor extends BaseProcessor
         // Can't use 'behat.paths.base' since that's locked at this point to base folder (not module)
         $pathSuffix   = $this->container->getParameter('behat.silverstripe_extension.context.path_suffix');
         $currentModuleName = null;
-        $modules = SS_ClassLoader::instance()->getManifest()->getModules();
+        $modules = ClassLoader::instance()->getManifest()->getModules();
         $currentModuleName = $this->container->getParameter('behat.silverstripe_extension.module');
 
         // get module from short notation if path starts from @
