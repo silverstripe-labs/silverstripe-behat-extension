@@ -31,7 +31,7 @@
 		"symfony/translation": "~2.0",
 		"symfony/yaml": "~2.0",
 		"symfony/finder": "~2.0",
-		"silverstripe/testsession": "*",
+		"silverstripe/testsession": "^2",
 		"silverstripe/framework": "^4.0.0"
 	},
 
