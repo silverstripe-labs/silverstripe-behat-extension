@@ -448,9 +448,9 @@ class SilverStripeContext extends MinkContext implements SilverStripeAwareContex
      */
     public function givenTheCurrentTimeIs($time)
     {
-        $newDatetime = \DateTime::createFromFormat('H:i:s', $date);
+        $newDatetime = \DateTime::createFromFormat('H:i:s', $time);
         if (!$newDatetime) {
-            throw new InvalidArgumentException(sprintf('Invalid date format: %s (requires "H:i:s")', $date));
+            throw new InvalidArgumentException(sprintf('Invalid date format: %s (requires "H:i:s")', $time));
         }
 
         $state = $this->testSessionEnvironment->getState();
