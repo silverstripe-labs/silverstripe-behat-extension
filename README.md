@@ -719,6 +719,12 @@ It's based on the `vendor/bin/behat -di @cms` output.
 	Then /^the email should (not |)contain the following data:$/
 		Example: Then the email should contain the following data:
 
+	Then /^there should (not |)be an email titled "([^"]*)"$/
+
+	Then /^the email should (not |)be sent from "([^"]*)"$/
+
+	Then /^the email should (not |)be sent to "([^"]*)"$/
+
 ### Transformations
 
 Behat [transformations](http://docs.behat.org/guides/2.definitions.html#step-argument-transformations)
