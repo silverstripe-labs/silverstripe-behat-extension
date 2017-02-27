@@ -20,6 +20,9 @@ class CoreInitializationPass implements CompilerPassInterface
     {
         // Connect to database and build manifest
         $_GET['flush'] = 1;
+        if (!getenv('SS_ENVIRONMENT_TYPE')) {
+            putenv('SS_ENVIRONMENT_TYPE=dev');
+        }
         require_once('Core/Core.php');
 
         // Include bootstrap file
