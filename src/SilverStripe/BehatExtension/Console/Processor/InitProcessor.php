@@ -2,6 +2,8 @@
 
 namespace SilverStripe\BehatExtension\Console\Processor;
 
+use SilverStripe\Core\Manifest\Module;
+use SilverStripe\Core\Manifest\ModuleLoader;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -76,23 +78,22 @@ class InitProcessor extends BaseProcessor
 
         // Can't use 'behat.paths.base' since that's locked at this point to base folder (not module)
         $pathSuffix   = $this->container->getParameter('behat.silverstripe_extension.context.path_suffix');
-        $currentModuleName = null;
-        $modules = ClassLoader::instance()->getManifest()->getModules();
-        $currentModuleName = $this->container->getParameter('behat.silverstripe_extension.module');
 
         // get module from short notation if path starts from @
+        $currentModuleName = $this->container->getParameter('behat.silverstripe_extension.module');
         if (preg_match('/^\@([^\/\\\\]+)(.*)$/', $featuresPath, $matches)) {
             $currentModuleName = $matches[1];
-            // TODO Replace with proper module loader once AJShort's changes are merged into core
-            if (!array_key_exists($currentModuleName, $modules)) {
-                throw new \InvalidArgumentException(sprintf('Module "%s" not found', $currentModuleName));
-            }
-            $currentModulePath = $modules[$currentModuleName];
         }
-
         if (!$currentModuleName) {
             throw new \InvalidArgumentException('Can not find module to initialize suite.');
         }
+
+        // Get path for module
+        $module = ModuleLoader::instance()->getManifest()->getModule($currentModuleName);
+        if (!$module) {
+            throw new \InvalidArgumentException(sprintf('Module "%s" not found', $currentModuleName));
+        }
+        $currentModulePath = $module->getPath();
 
         // TODO Retrieve from module definition once that's implemented
         if ($input->getOption('namespace')) {

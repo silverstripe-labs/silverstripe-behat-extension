@@ -2,13 +2,13 @@
 
 namespace SilverStripe\BehatExtension\Console\Processor;
 
+use SilverStripe\Core\Manifest\ModuleLoader;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Behat\Behat\Console\Processor\LocatorProcessor as BaseProcessor;
-use SilverStripe\Core\Manifest\ClassLoader;
 
 /**
  * Path locator processor.
@@ -61,8 +61,6 @@ class LocatorProcessor extends BaseProcessor
         $pathSuffix   = $this->container->getParameter('behat.silverstripe_extension.context.path_suffix');
 
         $currentModuleName = null;
-        $modules = ClassLoader::instance()->getManifest()->getModules();
-
         // get module specified in behat.yml
         $currentModuleName = $this->container->getParameter('behat.silverstripe_extension.module');
 
@@ -70,7 +68,11 @@ class LocatorProcessor extends BaseProcessor
         if ($featuresPath && preg_match('/^\@([^\/\\\\]+)(.*)$/', $featuresPath, $matches)) {
             $currentModuleName = $matches[1];
             // TODO Replace with proper module loader once AJShort's changes are merged into core
-            $currentModulePath = $modules[$currentModuleName];
+            $module = ModuleLoader::instance()->getManifest()->getModule($currentModuleName);
+            if (!$module) {
+                throw new \InvalidArgumentException(sprintf('Module "%s" not found', $currentModuleName));
+            }
+            $currentModulePath = $module->getPath();
             $featuresPath = str_replace(
                 '@'.$currentModuleName,
                 $currentModulePath.DIRECTORY_SEPARATOR.$pathSuffix,
@@ -79,17 +81,27 @@ class LocatorProcessor extends BaseProcessor
         // get module from provided features path
         } elseif (!$currentModuleName && $featuresPath) {
             $path = realpath(preg_replace('/\.feature\:.*$/', '.feature', $featuresPath));
-            foreach ($modules as $moduleName => $modulePath) {
+            $modules = ModuleLoader::instance()->getManifest()->getModules();
+            $currentModulePath = null;
+            foreach ($modules as $module) {
+                $modulePath = $module->getPath();
                 if (false !== strpos($path, realpath($modulePath))) {
-                    $currentModuleName = $moduleName;
+                    $currentModuleName = $module->getName();
                     $currentModulePath = realpath($modulePath);
                     break;
                 }
             }
+            if (!$currentModulePath) {
+                throw new \InvalidArgumentException(sprintf('Module not found in path "%s"', $featuresPath));
+            }
             $featuresPath = $currentModulePath.DIRECTORY_SEPARATOR.$pathSuffix.DIRECTORY_SEPARATOR.$featuresPath;
         // if module is configured for profile and feature provided
         } elseif ($currentModuleName && $featuresPath) {
-            $currentModulePath = $modules[$currentModuleName];
+            $module = ModuleLoader::instance()->getManifest()->getModule($currentModuleName);
+            if (!$module) {
+                throw new \InvalidArgumentException(sprintf('Module "%s" not found', $currentModuleName));
+            }
+            $currentModulePath = $module->getPath();
             $featuresPath = $currentModulePath.DIRECTORY_SEPARATOR.$pathSuffix.DIRECTORY_SEPARATOR.$featuresPath;
         }
 
