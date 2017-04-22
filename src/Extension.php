@@ -2,11 +2,13 @@
 
 namespace SilverStripe\BehatExtension;
 
+use Behat\Testwork\Call\ServiceContainer\CallExtension;
 use Behat\Testwork\Cli\ServiceContainer\CliExtension;
 use Behat\Testwork\Suite\Cli\InitializationController;
 use Behat\Testwork\Suite\ServiceContainer\SuiteExtension;
 use SilverStripe\BehatExtension\Controllers\ModuleInitialisationController;
 use SilverStripe\BehatExtension\Controllers\ModuleSuiteLocator;
+use SilverStripe\BehatExtension\Utility\RetryableCallHandler;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
@@ -63,6 +65,7 @@ class Extension implements ExtensionInterface
         // Add CLI substitutions
         $this->loadSuiteLocator($container);
         $this->loadBootstrapController($container);
+        $this->loadCallHandlers($container, $config['error_reporting'], $config['retry_seconds']);
 
         // Set various paths
         $container->setParameter('silverstripe_extension.admin_url', $config['admin_url']);
@@ -109,6 +112,14 @@ class Extension implements ExtensionInterface
                 end()->
                 scalarNode('bootstrap_file')->
                     defaultNull()->
+                end()->
+                scalarNode('error_reporting')->
+                    info('Call executor will catch exceptions matching this level')->
+                    defaultValue(E_ALL | E_STRICT)->
+                end()->
+                scalarNode('retry_seconds')->
+                    info('Number of seconds that @retry tags will retry for')->
+                    defaultValue(2)->
                 end()->
                 arrayNode('ajax_steps')->
                     defaultValue(array(
@@ -160,5 +171,19 @@ class Extension implements ExtensionInterface
         ]);
         $definition->addTag(CliExtension::CONTROLLER_TAG, ['priority' => 900]);
         $container->setDefinition(CliExtension::CONTROLLER_TAG . '.initialization', $definition);
+    }
+
+    /**
+     * Shivs in custom call handler
+     *
+     * @param ContainerBuilder $container
+     * @param integer $errorReporting
+     * @param int $retrySeconds
+     */
+    protected function loadCallHandlers(ContainerBuilder $container, $errorReporting, $retrySeconds)
+    {
+        $definition = new Definition(RetryableCallHandler::class, [$errorReporting, $retrySeconds]);
+        $definition->addTag(CallExtension::CALL_HANDLER_TAG, ['priority' => 50]);
+        $container->setDefinition(CallExtension::CALL_HANDLER_TAG . '.runtime', $definition);
     }
 }

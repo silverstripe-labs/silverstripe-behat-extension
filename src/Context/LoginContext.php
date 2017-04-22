@@ -59,7 +59,7 @@ class LoginContext implements Context
     }
 
     /**
-     * @When /^I log in with "(?<username>[^"]*)" and "(?<password>[^"]*)"$/
+     * @When /^I log in with "([^"]*)" and "([^"]*)"$/
      * @param string $email
      * @param string $password
      */

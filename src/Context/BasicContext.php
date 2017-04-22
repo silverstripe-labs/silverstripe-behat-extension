@@ -17,6 +17,7 @@ use Behat\Testwork\Tester\Result\TestResult;
 use Exception;
 use SilverStripe\Assets\File;
 use SilverStripe\Assets\Filesystem;
+use SilverStripe\BehatExtension\Utility\StepHelper;
 use WebDriver\Exception as WebDriverException;
 use WebDriver\Session as WebDriverSession;
 
@@ -31,13 +32,7 @@ use WebDriver\Session as WebDriverSession;
 class BasicContext implements Context
 {
     use MainContextAwareTrait;
-
-    /**
-     * Work-around for https://github.com/Behat/Behat/issues/653
-     *
-     * @var ScenarioNode
-     */
-    protected $currentScenario = null;
+    use StepHelper;
 
     /**
      * Date format in date() syntax
@@ -69,28 +64,6 @@ class BasicContext implements Context
         /** @var SilverStripeContext $context */
         $context = $this->getMainContext();
         return $context->getSession($name);
-    }
-
-    /**
-     * Work-around for https://github.com/Behat/Behat/issues/653
-     *
-     * @BeforeScenario
-     * @param BeforeScenarioScope $event
-     */
-    public function handleScenarioBegin(BeforeScenarioScope $event)
-    {
-        $this->currentScenario = $event->getScenario();
-    }
-
-    /**
-     * Work-around for https://github.com/Behat/Behat/issues/653
-     *
-     * @AfterScenario
-     * @param AfterScenarioScope $event
-     */
-    public function handleScenarioEnd(AfterScenarioScope $event)
-    {
-        $this->currentScenario = null;
     }
 
     /**
@@ -447,11 +420,11 @@ JS;
      */
     public function iShouldSeeAButton($negative, $text)
     {
-        $matchedEl = $this->findNamedButton($text);
+        $button = $this->findNamedButton($text);
         if (trim($negative)) {
-            assertNull($matchedEl, sprintf('%s button found', $text));
+            assertNull($button, sprintf('%s button found', $text));
         } else {
-            assertNotNull($matchedEl, sprintf('%s button not found', $text));
+            assertNotNull($button, sprintf('%s button not found', $text));
         }
     }
 
@@ -1262,13 +1235,14 @@ JS;
      */
     protected function stepHasTag(StepScope $event, $tag)
     {
-        // Check scenario
-        if ($this->currentScenario && $this->currentScenario->hasTag($tag)) {
-            return true;
-        }
         // Check feature
         $feature = $event->getFeature();
         if ($feature && $feature->hasTag($tag)) {
+            return true;
+        }
+        // Check scenario
+        $scenario = $this->getStepScenario($feature, $event->getStep());
+        if ($scenario && $scenario->hasTag($tag)) {
             return true;
         }
         return false;
