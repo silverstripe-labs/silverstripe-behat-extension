@@ -4,7 +4,7 @@ namespace SilverStripe\BehatExtension\Utility;
 
 use SilverStripe\Dev\TestMailer as BaseTestMailer;
 use SilverStripe\Core\Injector\Injector;
-use TestSessionEnvironment;
+use SilverStripe\TestSession\TestSessionEnvironment;
 
 /**
  * Same principle as core TestMailer class,
@@ -21,7 +21,7 @@ class TestMailer extends BaseTestMailer
 
     public function __construct()
     {
-        $this->testSessionEnvironment = Injector::inst()->get('TestSessionEnvironment');
+        $this->testSessionEnvironment = TestSessionEnvironment::singleton();
     }
 
     /**

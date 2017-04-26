@@ -12,6 +12,8 @@ use Behat\Mink\Exception\ElementNotFoundException;
 use InvalidArgumentException;
 use SilverStripe\BehatExtension\Context\SilverStripeAwareContextInterface;
 use Symfony\Component\Yaml\Yaml;
+use SilverStripe\TestSession\TestSessionEnvironment;
+
 
 // Mink etc.
 require_once 'vendor/autoload.php';
@@ -72,7 +74,7 @@ class SilverStripeContext extends MinkContext implements SilverStripeAwareContex
     {
         // Initialize your context here
         $this->context = $parameters;
-        $this->testSessionEnvironment = new \TestSessionEnvironment();
+        $this->testSessionEnvironment = new TestSessionEnvironment();
     }
 
     public function setDatabase($databaseName)

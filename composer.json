@@ -38,7 +38,6 @@
 			"SilverStripe\\BehatExtension\\Tests": "tests/"
 		},
 		"classmap": [
-			"testsession/code",
 			"framework",
 			"vendor/phpunit/phpunit"
 		]
