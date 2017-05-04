@@ -268,7 +268,9 @@ abstract class SilverStripeContext extends MinkContext implements SilverStripeAw
         }
         DataObject::flush_and_destroy_cache();
         DataObject::reset();
-        SiteTree::reset();
+        if (class_exists(SiteTree::class)) {
+            SiteTree::reset();
+        }
     }
 
     /**
