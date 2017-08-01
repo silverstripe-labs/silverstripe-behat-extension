@@ -2,6 +2,7 @@
 
 namespace SilverStripe\BehatExtension\Utility;
 
+use Behat\Behat\Hook\Scope\StepScope;
 use Behat\Gherkin\Node\FeatureNode;
 use Behat\Gherkin\Node\NodeInterface;
 use Behat\Gherkin\Node\ScenarioInterface;
@@ -59,5 +60,27 @@ trait StepHelper
             sleep(1);
         } while (--$timeout >= 0);
         throw $firstEx;
+    }
+
+    /**
+     * Check if a step has a given tag
+     *
+     * @param StepScope $event
+     * @param string $tag
+     * @return bool
+     */
+    protected function stepHasTag(StepScope $event, $tag)
+    {
+        // Check feature
+        $feature = $event->getFeature();
+        if ($feature && $feature->hasTag($tag)) {
+            return true;
+        }
+        // Check scenario
+        $scenario = $this->getStepScenario($feature, $event->getStep());
+        if ($scenario && $scenario->hasTag($tag)) {
+            return true;
+        }
+        return false;
     }
 }

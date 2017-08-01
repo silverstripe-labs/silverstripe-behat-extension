@@ -6,10 +6,8 @@ use Behat\Behat\Context\Context;
 use Behat\Behat\Definition\Call;
 use Behat\Behat\Hook\Scope\AfterScenarioScope;
 use Behat\Behat\Hook\Scope\AfterStepScope;
-use Behat\Behat\Hook\Scope\BeforeScenarioScope;
 use Behat\Behat\Hook\Scope\BeforeStepScope;
 use Behat\Behat\Hook\Scope\StepScope;
-use Behat\Gherkin\Node\ScenarioNode;
 use Behat\Mink\Driver\Selenium2Driver;
 use Behat\Mink\Element\NodeElement;
 use Behat\Mink\Session;
@@ -1224,27 +1222,5 @@ JS;
     protected function logException(Exception $exception)
     {
         file_put_contents('php://stderr', 'Exception caught: ' . $exception->getMessage());
-    }
-
-    /**
-     * Check if a step has a given tag
-     *
-     * @param StepScope $event
-     * @param string $tag
-     * @return bool
-     */
-    protected function stepHasTag(StepScope $event, $tag)
-    {
-        // Check feature
-        $feature = $event->getFeature();
-        if ($feature && $feature->hasTag($tag)) {
-            return true;
-        }
-        // Check scenario
-        $scenario = $this->getStepScenario($feature, $event->getStep());
-        if ($scenario && $scenario->hasTag($tag)) {
-            return true;
-        }
-        return false;
     }
 }
