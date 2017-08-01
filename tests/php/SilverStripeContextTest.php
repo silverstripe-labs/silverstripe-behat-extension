@@ -9,11 +9,19 @@ use Behat\Mink\Mink;
 use Behat\Mink\Driver\DriverInterface;
 use Behat\Mink\Element\Element;
 use SilverStripe\BehatExtension\Tests\SilverStripeContextTest\FeatureContext;
+use SilverStripe\Dev\SapphireTest;
 
 class SilverStripeContextTest extends \PHPUnit_Framework_TestCase
 {
 
     protected $backupGlobals = false;
+
+    public static function setUpBeforeClass()
+    {
+        // Bootstrap test environment
+        parent::setUpBeforeClass();
+        SapphireTest::start();
+    }
 
     /**
      * @expectedException \LogicException

@@ -38,7 +38,7 @@
     }
   },
   "autoload-dev": {
-    "psr-0": {
+    "psr-4": {
       "SilverStripe\\BehatExtension\\Tests\\": "tests/php/"
     },
     "classmap": [
