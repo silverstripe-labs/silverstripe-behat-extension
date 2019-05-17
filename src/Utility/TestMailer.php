@@ -94,6 +94,6 @@ class TestMailer extends BaseTestMailer
             $state->emails = array();
         }
         $state->emails[] = array_filter($data);
-        $this->testSessionEnvironment->applyState($state);
+        $this->testSessionEnvironment->saveState($state);
     }
 }
