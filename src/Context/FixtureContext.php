@@ -897,13 +897,13 @@ YAML;
 
         // Try direct mapping
         $class = str_replace(' ', '', ucwords($type));
-        if (class_exists($class) && is_subclass_of($class, 'SilverStripe\\ORM\\DataObject')) {
+        if (class_exists($class) && is_subclass_of($class, DataObject::class)) {
             return ClassInfo::class_name($class);
         }
 
         // Fall back to singular names
-        foreach (array_values(ClassInfo::subclassesFor('SilverStripe\\ORM\\DataObject')) as $candidate) {
-            if (strcasecmp(singleton($candidate)->singular_name(), $type) === 0) {
+        foreach (array_values(ClassInfo::subclassesFor(DataObject::class)) as $candidate) {
+            if (class_exists($candidate) && strcasecmp(singleton($candidate)->singular_name(), $type) === 0) {
                 return $candidate;
             }
         }
