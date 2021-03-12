@@ -7,4 +7,3 @@ env:
   global:
     - COMPOSER_ROOT_VERSION="1.x-dev"
     - REQUIRE_RECIPE="4.x-dev"
-    - DB=MYSQL

@@ -1,5 +1,6 @@
-<phpunit colors="true">
-	<testsuite name="Default">
-		<directory>tests/php</directory>
-	</testsuite>
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/silverstripe/framework/tests/bootstrap.php" colors="true">
+    <testsuite name="Default">
+        <directory>tests/php</directory>
+    </testsuite>
 </phpunit>
