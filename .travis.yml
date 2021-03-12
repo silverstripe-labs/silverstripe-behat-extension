@@ -1,34 +1,9 @@
-language: php
+version: ~> 1.0
 
-dist: xenial
+import:
+  - silverstripe/silverstripe-travis-shared:config/provision/standard-jobs-fixed.yml
 
-sudo: false
-
-cache:
-  directories:
-    - $HOME/.composer/cache/files
-matrix:
-  include:
-    - php: 7.1
-      env: PHPUNIT_TEST=1
-    - php: 7.2
-      env: PHPUNIT_TEST=1
-    - php: 7.3
-      env: PHPUNIT_TEST=1 PHPCS_TEST=1
-    - php: 7.4
-      env: PHPUNIT_TEST=1
-
-
-
-before_script:
-  - export PATH=~/.composer/vendor/bin:$PATH
-  - composer validate
-  - composer install --prefer-dist
-  - composer require --prefer-dist --no-update silverstripe/recipe-core:^4
-  - composer update
-  - if [[ $PHPCS_TEST ]]; then composer global require squizlabs/php_codesniffer:^3 --prefer-dist --no-interaction --no-progress --no-suggest -o; fi
-  - phpenv rehash
-
-script:
-  - if [[ $PHPUNIT_TEST ]]; then vendor/bin/phpunit tests/php; fi
-  - if [[ $PHPCS_TEST ]]; then composer run-script lint; fi
+env:
+  global:
+    - COMPOSER_ROOT_VERSION="1.x-dev"
+    - REQUIRE_RECIPE="4.x-dev"
