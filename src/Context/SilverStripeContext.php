@@ -87,7 +87,7 @@ abstract class SilverStripeContext extends MinkContext implements SilverStripeAw
      */
     public function __construct(array $parameters = null)
     {
-        if (!preg_match('/\\FeatureContext$/', get_class($this))) {
+        if (!preg_match('/\\\FeatureContext$/', get_class($this))) {
             throw new InvalidArgumentException(
                 'Subclasses of SilverStripeContext must be named FeatureContext. Found "' . get_class($this) . '""'
             );
